@@ -1,4 +1,5 @@
 ﻿using InDaCompany.Data.Interfaces;
+using InDaCompany.Models;
 using Microsoft.Data.SqlClient;
 namespace InDaCompany.Data.Implementations;
 
