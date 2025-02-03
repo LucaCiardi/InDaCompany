@@ -18,8 +18,8 @@ public class DAOForum : BaseDao<Forum>, IDAOForum
             {
                 ID = reader.GetInt32(0),
                 Nome = reader.GetString(1),
-                Descrizione = reader.GetString(2),
-                Team = reader.GetString(3)
+                Descrizione = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Team = reader.IsDBNull(3) ? null : reader.GetString(3)
             });
         }
         return forums;
@@ -38,8 +38,8 @@ public class DAOForum : BaseDao<Forum>, IDAOForum
             {
                 ID = reader.GetInt32(0),
                 Nome = reader.GetString(1),
-                Descrizione = reader.GetString(2),
-                Team = reader.GetString(3)
+                Descrizione = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Team = reader.IsDBNull(3) ? null : reader.GetString(3)
             };
         }
         return null;
