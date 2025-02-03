@@ -8,16 +8,16 @@ namespace InDaCompany.Controllers;
 [Authorize]
 public class ForumController : BaseController
 {
-    private readonly DAOForum _daoForum;
+    private readonly IDAOForum _daoForum;
 
-    public ForumController(IConfiguration configuration) : base(configuration)
+    public ForumController(IConfiguration configuration, IDAOForum daoForum) : base(configuration)
     {
-        _daoForum = new DAOForum(ConnectionString);
+        _daoForum = daoForum;
     }
     public ActionResult Index()
     {
         var prodotti = _daoForum.GetAll();
-        return View(prodotti);
+        return View(forums);
     }
     public ActionResult Create()
     {
@@ -25,29 +25,46 @@ public class ForumController : BaseController
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public ActionResult Create(Forum forum)
     {
         if (ModelState.IsValid)
         {
-            _daoForum.Insert(forum);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _daoForum.Insert(forum);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Unable to save changes. Try again.");
+            }
         }
         return View(forum);
     }
+
     public ActionResult Edit(int id)
     {
         var forum = _daoForum.GetById(id);
         if (forum == null) return NotFound();
         return View(forum);
     }
-
+    
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public ActionResult Edit(Forum forum)
     {
         if (ModelState.IsValid)
         {
-            _daoForum.Update(forum);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _daoForum.Update(forum);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Unable to save changes. Try again.");
+            }
         }
         return View(forum);
     }
@@ -59,11 +76,20 @@ public class ForumController : BaseController
         return View(forum);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [ActionName("Delete")]
     public ActionResult DeleteConfirmed(int id)
     {
-        _daoForum.Delete(id);
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            _daoForum.Delete(id);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception)
+        {
+            return RedirectToAction(nameof(Index));
+        }
     }
 
     //inserire metodo per creare nuovo thread all'interno del forum
