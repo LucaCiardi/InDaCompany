@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementation
 {
-    public class DAOUtenti : DAOBase<Utente>, IDAOBase<Utente>
+    public class DAOUtenti : DAOBase<Utente>, IDAOUtenti
     {
         public DAOUtenti(string connectionString) : base(connectionString)
         {
@@ -28,7 +28,7 @@ namespace InDaCompany.Data.Implementation
         {
             var utenti = new List<Utente>();
             using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT ID, Nome, Cognome, Email, Ruolo, Team, DataCreazione FROM Utenti", conn);
+            using var cmd = new SqlCommand("SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione FROM Utenti", conn);
             conn.Open();
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
@@ -41,7 +41,7 @@ namespace InDaCompany.Data.Implementation
                     Email = reader.GetString(3),
                     PasswordHash = reader.GetString(4),
                     Ruolo = reader.GetString(5),
-                    Team = reader.GetString(6),
+                    Team = reader.IsDBNull(6) ? null : reader.GetString(6),
                     DataCreazione = reader.GetDateTime(7)
                 });
             }
@@ -51,7 +51,7 @@ namespace InDaCompany.Data.Implementation
         public Utente GetById(int id)
         {
             using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT ID, Nome, Cognome, Email, Ruolo, Team, DataCreazione FROM Utenti WHERE ID = @ID", conn);
+            using var cmd = new SqlCommand("SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione FROM Utenti WHERE ID = @ID", conn);
             cmd.Parameters.AddWithValue("@ID", id);
             conn.Open();
             using var reader = cmd.ExecuteReader();
@@ -62,10 +62,10 @@ namespace InDaCompany.Data.Implementation
                     ID = reader.GetInt32(0),
                     Nome = reader.GetString(1),
                     Cognome = reader.GetString(2),
-                    PasswordHash = reader.GetString(4),
                     Email = reader.GetString(3),
+                    PasswordHash = reader.GetString(4),
                     Ruolo = reader.GetString(5),
-                    Team = reader.GetString(6),
+                    Team = reader.IsDBNull(6) ? null : reader.GetString(6),
                     DataCreazione = reader.GetDateTime(7)
                 };
             }
@@ -81,19 +81,18 @@ namespace InDaCompany.Data.Implementation
             try
             {
                 using var cmd = new SqlCommand(
-                    "INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione) " +
-                    "OUTPUT INSERTED.ID " +
-                    "VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @DataCreazione)",
-                    conn, transaction);
+                    "INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team) " +
+            "OUTPUT INSERTED.ID " +
+            "VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team)",
+            conn, transaction);
 
                 cmd.Parameters.AddWithValue("@Nome", entity.Nome);
                 cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
                 cmd.Parameters.AddWithValue("@Email", entity.Email);
                 cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
                 cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
-                cmd.Parameters.AddWithValue("@Team", entity.Team);
-                cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
-
+                cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
+                
                 var newId = (int)cmd.ExecuteScalar();
                 entity.ID = newId;
 
@@ -110,16 +109,14 @@ namespace InDaCompany.Data.Implementation
         {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(@"
-                UPDATE Utenti
-                SET 
-                    Nome = @Nome,
-                    Cognome = @Cognome,
-                    Email = @Email,
-                    PasswordHash = @PasswordHash,
-                    Ruolo = @Ruolo,
-                    Team = @Team,
-                    DataCreazione = @DataCreazione
-                WHERE ID = @ID", conn);
+        UPDATE Utenti
+        SET Nome = @Nome,
+            Cognome = @Cognome,
+            Email = @Email,
+            PasswordHash = @PasswordHash,
+            Ruolo = @Ruolo,
+            Team = @Team
+        WHERE ID = @ID", conn);
 
             cmd.Parameters.AddWithValue("@ID", entity.ID);
             cmd.Parameters.AddWithValue("@Nome", entity.Nome);
@@ -127,10 +124,8 @@ namespace InDaCompany.Data.Implementation
             cmd.Parameters.AddWithValue("@Email", entity.Email);
             cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
             cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
-            cmd.Parameters.AddWithValue("@Team", entity.Team);
-            cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
-            cmd.ExecuteNonQuery();
-
+            cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
+           
             conn.Open();
             cmd.ExecuteNonQuery();
         }
