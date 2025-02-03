@@ -1,6 +1,6 @@
 ﻿namespace InDaCompany.Data.Interfaces
 {
-    public interface IDAOUtenti<T> : IDAOBase<T>
+    public interface IDAOUtenti : IDAOBase<Utente>
     {
         public void Insert(Utente entity);
     }
