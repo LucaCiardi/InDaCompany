@@ -108,9 +108,8 @@ public class DAOPost : BaseDao<Post>, IDAOPost
     public void Insert(Post post)
     {
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("INSERT INTO Post (Testo, DataCreazione, AutoreID) VALUES (@Testo, @DataCreazione, @AutoreID)", conn);
+        using var cmd = new SqlCommand("INSERT INTO Post (Testo, AutoreID) VALUES (@Testo, @AutoreID)", conn);
         cmd.Parameters.AddWithValue("@Testo", post.Testo);
-        cmd.Parameters.AddWithValue("@DataCreazione", post.DataCreazione);
         cmd.Parameters.AddWithValue("@AutoreID", post.AutoreID);
         conn.Open();
         cmd.ExecuteNonQuery();
