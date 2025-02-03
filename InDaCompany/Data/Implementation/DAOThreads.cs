@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementation
 {
-    public class DAOThreads : DAOBase<Thread>, IDAOBase<Thread>
+    public class DAOThreads : DAOBase<Thread>, IDAOThreads
     {
         public DAOThreads(string connectionString) : base(connectionString)
         {
@@ -69,20 +69,12 @@ namespace InDaCompany.Data.Implementation
         public void Insert(Thread entity, int forumID, int autoreID)
         {
             using var conn = CreateConnection();
-            using var cmd = new SqlCommand(
-                "UPDATE Thread SET " +
-                "Titolo = @Titolo, " +
-                $"ForumID = {forumID}, " +
-                $"AutoreID = {autoreID}, " +
-                "DataCreazione = @DataCreazione " +
-                "WHERE ID = @ID",
-                conn);
+            using var cmd = new SqlCommand("INSERT INTO Thread (Titolo, ForumID, AutoreID) VALUES (@Titolo, @ForumID, @AutoreID)",
+        conn);
 
-            cmd.Parameters.AddWithValue("@ID", entity.ID);
             cmd.Parameters.AddWithValue("@Titolo", entity.Titolo);
-            cmd.Parameters.AddWithValue("@ForumID", entity.ForumID);
-            cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
-            cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
+            cmd.Parameters.AddWithValue("@ForumID", ForumID);
+            cmd.Parameters.AddWithValue("@AutoreID", AutoreID);
 
             conn.Open();
             cmd.ExecuteNonQuery();
@@ -104,9 +96,7 @@ namespace InDaCompany.Data.Implementation
             cmd.Parameters.AddWithValue("@Titolo", entity.Titolo);
             cmd.Parameters.AddWithValue("@ForumID", entity.ForumID);
             cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
-            cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
-            cmd.ExecuteNonQuery();
-
+            
             conn.Open();
             cmd.ExecuteNonQuery();
         }
