@@ -1,0 +1,56 @@
+﻿CREATE TABLE Utenti (
+    ID INT IDENTITY PRIMARY KEY,
+    Nome NVARCHAR(50) NOT NULL,
+    Cognome NVARCHAR(50) NOT NULL,
+    Email NVARCHAR(100) UNIQUE NOT NULL,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    Ruolo NVARCHAR(20) CHECK (Ruolo IN ('Dipendente', 'Manager', 'Admin')) NOT NULL,
+    Team NVARCHAR(50) NULL,
+    DataCreazione DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE Post (
+    ID INT IDENTITY PRIMARY KEY,
+    Testo NVARCHAR(MAX) NOT NULL,
+    DataCreazione DATETIME DEFAULT GETDATE(),
+    AutoreID INT NOT NULL,
+    FOREIGN KEY (AutoreID) REFERENCES Utenti(ID)
+);
+
+CREATE TABLE Forum (
+    ID INT IDENTITY PRIMARY KEY,
+    Nome NVARCHAR(100) NOT NULL,
+    Descrizione NVARCHAR(255) NULL,
+    Team NVARCHAR(50) NULL
+);
+
+CREATE TABLE Thread (
+    ID INT IDENTITY PRIMARY KEY,
+    Titolo NVARCHAR(255) NOT NULL,
+    ForumID INT NOT NULL,
+    AutoreID INT NOT NULL,
+    DataCreazione DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (ForumID) REFERENCES Forum(ID),
+    FOREIGN KEY (AutoreID) REFERENCES Utenti(ID)
+);
+
+CREATE TABLE MessaggiThread (
+    ID INT IDENTITY PRIMARY KEY,
+    ThreadID INT NOT NULL,
+    AutoreID INT NOT NULL,
+    Testo NVARCHAR(MAX) NOT NULL,
+    DataCreazione DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (ThreadID) REFERENCES Thread(ID),
+    FOREIGN KEY (AutoreID) REFERENCES Utenti(ID)
+);
+
+CREATE TABLE Ticket (
+    ID INT IDENTITY PRIMARY KEY,
+    Descrizione NVARCHAR(MAX) NOT NULL,
+    Stato NVARCHAR(20) CHECK (Stato IN ('Aperto', 'In lavorazione', 'Chiuso')) NOT NULL DEFAULT 'Aperto',
+    CreatoDaID INT NOT NULL,
+    AssegnatoAID INT NULL,
+    DataApertura DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (CreatoDaID) REFERENCES Utenti(ID),
+    FOREIGN KEY (AssegnatoAID) REFERENCES Utenti(ID)
+);
