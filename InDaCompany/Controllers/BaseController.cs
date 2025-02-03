@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 namespace InDaCompany.Controllers;
 
-public class BaseController : Controller
+public abstract class BaseController : Controller
 {
     protected readonly string ConnectionString;
 
