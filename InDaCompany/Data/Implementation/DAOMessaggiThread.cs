@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementation
 {
-    public class DAOMessaggiThread : DAOBase<MessaggioThread>, IDAOBase<MessaggioThread>
+    public class DAOMessaggiThread : DAOBase<MessaggioThread>, IDAOMessaggiThread
     {
         public DAOMessaggiThread(string connectionString) : base(connectionString)
         {
@@ -71,19 +71,12 @@ namespace InDaCompany.Data.Implementation
         {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(
-                "UPDATE MessaggiThread SET " +
-                $"ThreadID = {threadID}, " +
-                $"AutoreID = {autoreID}, " +
-                "Testo = @Testo, " +
-                "DataCreazione = @DataCreazione " +
-                "WHERE ID = @ID",
-                conn);
+                "INSERT INTO MessaggiThread (ThreadID, AutoreID, Testo) VALUES (@ThreadID, @AutoreID, @Testo)",
+        conn);
 
-            cmd.Parameters.AddWithValue("@ID", entity.ID);
-            cmd.Parameters.AddWithValue("@ForumID", entity.ThreadID);
-            cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
-            cmd.Parameters.AddWithValue("@Testo", entity.Testo);
-            cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
+            cmd.Parameters.AddWithValue("@ThreadID", threadID);
+    cmd.Parameters.AddWithValue("@AutoreID", autoreID);
+    cmd.Parameters.AddWithValue("@Testo", entity.Testo);
 
             conn.Open();
             cmd.ExecuteNonQuery();
@@ -93,20 +86,16 @@ namespace InDaCompany.Data.Implementation
         {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(@"
-                UPDATE MessaggiThread
-                SET 
-                    ThreadID = @ThreadID, 
-                    AutoreID = @AutoreID, 
-                    Testo = @Testo, 
-                    DataCreazione = @DataCreazione 
-                WHERE ID = @ID", conn);
+        UPDATE MessaggiThread
+        SET ThreadID = @ThreadID, 
+            AutoreID = @AutoreID, 
+            Testo = @Testo
+        WHERE ID = @ID", conn);
 
             cmd.Parameters.AddWithValue("@ID", entity.ID);
-            cmd.Parameters.AddWithValue("@ForumID", entity.ThreadID);
+            cmd.Parameters.AddWithValue("@ThreadID", entity.ThreadID);
             cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
             cmd.Parameters.AddWithValue("@Testo", entity.Testo);
-            cmd.Parameters.AddWithValue("@DataCreazione", entity.DataCreazione);
-            cmd.ExecuteNonQuery();
 
             conn.Open();
             cmd.ExecuteNonQuery();
