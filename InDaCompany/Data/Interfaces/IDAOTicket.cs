@@ -1,4 +1,6 @@
-﻿namespace InDaCompany.Data.Interfaces;
+﻿using InDaCompany.Models;
+
+namespace InDaCompany.Data.Interfaces;
 
 public interface IDAOTicket : IBaseDao<Ticket>
 {

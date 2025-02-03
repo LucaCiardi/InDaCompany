@@ -1,4 +1,4 @@
-﻿namespace InDaCompany
+﻿namespace InDaCompany.Models
 {
     public class Utente
     {
@@ -12,7 +12,7 @@
 
         public string PasswordHash { get; set; }
 
-        public string Ruolo { get; set; } 
+        public string Ruolo { get; set; }
 
         public string? Team { get; set; }
 

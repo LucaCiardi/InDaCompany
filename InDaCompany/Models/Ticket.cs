@@ -1,4 +1,4 @@
-﻿namespace InDaCompany
+﻿namespace InDaCompany.Models
 {
     public class Ticket
     {
@@ -6,7 +6,7 @@
 
         public string Descrizione { get; set; }
 
-        public string Stato { get; set; } 
+        public string Stato { get; set; }
 
         public int CreatoDaID { get; set; }
 

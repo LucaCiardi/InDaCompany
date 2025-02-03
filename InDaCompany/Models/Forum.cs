@@ -1,4 +1,4 @@
-﻿namespace InDaCompany
+﻿namespace InDaCompany.Models
 {
     public class Forum
     {
