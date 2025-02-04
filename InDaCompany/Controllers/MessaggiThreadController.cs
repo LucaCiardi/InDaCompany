@@ -7,18 +7,17 @@ namespace InDaCompany.Controllers;
 
 public class MessaggiThreadController : Controller
 {
-    private readonly DAOMessaggiThread _daoMessaggiThread;
+    private readonly IDAOMessaggiThread _daoMessaggiThread;
 
-    public MessaggiThreadController(IConfiguration configuration)
+    public MessaggiThreadController(IConfiguration configuration, IDAOMessaggiThread daoMessaggiThread)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        _daoMessaggiThread = new DAOMessaggiThread(connectionString);
+        _daoMessaggiThread = daoMessaggiThread;
     }
 
     public IActionResult Index()
     {
         var threadMes = _daoMessaggiThread.GetAll();
-        return View(threadMes);
+        return View(messaggi);
     }
 
     public IActionResult Create()
@@ -34,18 +33,17 @@ public class MessaggiThreadController : Controller
         {
             try
             {
-                _daoMessaggiThread.Insert(threadMes);
-                TempData["Success"] = "Messagge created successfully!";
+                _daoMessaggiThread.Insert(messaggio, messaggio.ThreadID, User.GetUserId());
+                TempData["Success"] = "Messaggio creato con successo!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error creating messagge: {ex.Message}";
+                TempData["Error"] = $"Errore durante la creazioen del messaggio: {ex.Message}";
+                return View(messaggio);
             }
         }
-
-        ViewBag.Negozi = _daoMessaggiThread.GetAll();
-        return View(threadMes);
+        return View(messaggio);
     }
     public IActionResult Edit(int id)
     {
@@ -54,12 +52,12 @@ public class MessaggiThreadController : Controller
         {
             return NotFound();
         }
-        return View(threadMes);
+        return View(messaggio);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, MessaggioThread threadMes)
+    public IActionResult Edit(int id, MessaggioThread messaggio)
     {
         if (id != threadMes.ID)
         {
@@ -70,26 +68,31 @@ public class MessaggiThreadController : Controller
         {
             try
             {
-                _daoMessaggiThread.Update(threadMes);
-                TempData["Success"] = "Message updated successfully";
+                var original = _daoMessaggiThread.GetById(id);
+                if (original == null) return NotFound();
+                messaggio.DataCreazione = original.DataCreazione;
+                messaggio.AutoreID = original.AutoreID;
+                _daoMessaggiThread.Update(messaggio);
+                TempData["Success"] = "Messaggio modificato con successo";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error updating message: {ex.Message}";
+                TempData["Error"] = $"Errore durante la modifica del messaggio: {ex.Message}";
+                return View(messaggio);
             }
-            return RedirectToAction(nameof(Index));
         }
-        return View(threadMes);
+        return View(messaggio);
     }
 
     public IActionResult Delete(int id)
     {
-        var threadMes = _daoMessaggiThread.GetById(id);
-        if (threadMes == null)
+        var messaggio = _daoMessaggiThread.GetById(id);
+        if (messaggio == null)
         {
             return NotFound();
         }
-        return View(threadMes);
+        return View(messaggio);
     }
 
     [HttpPost, ActionName("Delete")]
@@ -98,13 +101,16 @@ public class MessaggiThreadController : Controller
     {
         try
         {
+            var messaggio = _daoMessaggiThread.GetById(id);
+            if (messaggio == null) return NotFound();
             _daoMessaggiThread.Delete(id);
-            TempData["Success"] = "Message deleted successfully";
+            TempData["Success"] = "Messaggio eliminato con successo";
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Error deleting message: {ex.Message}";
+            TempData["Error"] = $"Errore durante l'eliminazione del messaggio: {ex.Message}";
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Index));
     }
 }
