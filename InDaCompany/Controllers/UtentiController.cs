@@ -1,4 +1,4 @@
-﻿using InDaCompany.Data.Implementation;
+﻿using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +7,8 @@ namespace InDaCompany.Controllers;
 [Authorize]
 public class UtentiController : Controller
 {
+    static Utente _utenteLoggato = null;
+
     private readonly IDAOUtenti _daoUtenti;
 
     public UtentiController(IConfiguration configuration, IDAOUtenti daoUtenti)
@@ -16,7 +18,7 @@ public class UtentiController : Controller
 
     public IActionResult Index()
     {
-        var utente = _daoUtenti.GetAll();
+        var utenti = _daoUtenti.GetAll();
         return View(utenti);
     }
 
@@ -53,7 +55,7 @@ public class UtentiController : Controller
         {
             return NotFound();
         }
-        return View(utente); 
+        return View(utente);
     }
 
     [HttpPost]
@@ -108,4 +110,30 @@ public class UtentiController : Controller
             return RedirectToAction(nameof(Index));
         }
     }
+
+    [HttpPost]
+    public IActionResult Login(string us, string pw)
+    {
+        try
+        {
+            _utenteLoggato = _daoUtenti.GetByCredentials(us, pw);
+            TempData["Success"] = $"Credenziali riconosciute di {_utenteLoggato.Nome} {_utenteLoggato.Cognome}";
+            return View(_utenteLoggato);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Errore durante la convalida delle credenziali: {ex.Message}";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    public IActionResult Logout()
+    {
+        _utenteLoggato = null;
+
+        return RedirectToAction(nameof(Index));
+    }
+
+
+
 }
