@@ -5,7 +5,8 @@ namespace InDaCompany.Data.Interfaces
     public interface IDAOUtenti : IBaseDao<Utente>
     {
         public void Insert(Utente entity);
-
-        public Utente GetByCredentials(string us, string pw);
+        Task<Utente> GetByEmail(string email);
+        bool VerifyPassword(string password, string hashedPassword);
+        string HashPassword(string password);
     }
 }
