@@ -7,13 +7,14 @@ namespace InDaCompany.Controllers;
 [Authorize]
 public class UtentiController : Controller
 {
-    static Utente _utenteLoggato = null;
-
     private readonly IDAOUtenti _daoUtenti;
+    private readonly IConfiguration _configuration;
+
 
     public UtentiController(IConfiguration configuration, IDAOUtenti daoUtenti)
     {
         _daoUtenti = daoUtenti;
+        _configuration = configuration;
     }
 
     public IActionResult Index()
@@ -110,30 +111,53 @@ public class UtentiController : Controller
             return RedirectToAction(nameof(Index));
         }
     }
-
+    [AllowAnonymous]
     [HttpPost]
-    public IActionResult Login(string us, string pw)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(string email, string password)
     {
         try
         {
-            _utenteLoggato = _daoUtenti.GetByCredentials(us, pw);
-            TempData["Success"] = $"Credenziali riconosciute di {_utenteLoggato.Nome} {_utenteLoggato.Cognome}";
-            return View(_utenteLoggato);
+            var user = await _daoUtenti.GetByEmail(email);
+            if (user == null)
+            {
+                TempData["Error"] = "Credenziali non valide";
+                return RedirectToAction("Login");
+            }
+
+            if (!VerifyPassword(password, user.PasswordHash))
+            {
+                TempData["Error"] = "Credenziali non valide";
+                return RedirectToAction("Login");
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, user.Ruolo),
+                new Claim("UserId", user.ID.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            TempData["Success"] = $"Welcome {user.Nome} {user.Cognome}";
+            return RedirectToAction("Index", "Home");
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Errore durante la convalida delle credenziali: {ex.Message}";
-            return RedirectToAction(nameof(Index));
+            TempData["Error"] = "C'è stato un errore durante il login";
+            return RedirectToAction("Login");
         }
     }
 
-    public IActionResult Logout()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
     {
-        _utenteLoggato = null;
-
-        return RedirectToAction(nameof(Index));
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Index", "Home");
     }
-
-
-
 }
