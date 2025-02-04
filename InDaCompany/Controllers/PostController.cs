@@ -3,21 +3,20 @@ using InDaCompany.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers;
-
+[Authorize]
 public class PostController : Controller
 {
-    private readonly DAOPost _daoPost;
+    private readonly IDAOPost _daoPost;
 
-    public PostController(IConfiguration configuration)
+    public PostController(IConfiguration configuration, IDAOPost daoPost)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        _daoPost = new DAOPost(connectionString);
+        _daoPost = daoPost;
     }
 
     public IActionResult Index()
     {
         var post = _daoPost.GetAll();
-        return View(post);
+        return View(posts);
     }
 
     public IActionResult Create()
@@ -33,17 +32,17 @@ public class PostController : Controller
         {
             try
             {
+                post.AutoreID = User.GetUserId();
                 _daoPost.Insert(post);
-                TempData["Success"] = "Product created successfully!";
+                TempData["Success"] = "Post creato con successo!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error creating product: {ex.Message}";
+                TempData["Error"] = $"Errore durante la creazione del post: {ex.Message}";
+                 return View(post);
             }
         }
-
-        ViewBag.Negozi = _daoPost.GetAll();
         return View(post);
     }
     public IActionResult Edit(int id)
@@ -69,14 +68,19 @@ public class PostController : Controller
         {
             try
             {
+                var originalPost = _daoPost.GetById(id);
+                if (originalPost == null) return NotFound();
+                post.DataCreazione = originalPost.DataCreazione;
+                post.AutoreID = originalPost.AutoreID;
                 _daoPost.Update(post);
-                TempData["Success"] = "Product updated successfully";
+                TempData["Success"] = "Post modificato con successo";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error updating product: {ex.Message}";
+                TempData["Error"] = $"Errore durante la modifica del post: {ex.Message}";
+                 return View(post);
             }
-            return RedirectToAction(nameof(Index));
         }
         return View(post);
     }
@@ -97,13 +101,16 @@ public class PostController : Controller
     {
         try
         {
+            var post = _daoPost.GetById(id);
+            if (post == null) return NotFound();
             _daoPost.Delete(id);
-            TempData["Success"] = "Product deleted successfully";
+            TempData["Success"] = "Post eliminato con successo";
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Error deleting product: {ex.Message}";
+            TempData["Error"] = $"Errore durante l'eliminazione del post: {ex.Message}";
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Index));
     }
 }
