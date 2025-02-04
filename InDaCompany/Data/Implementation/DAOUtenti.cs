@@ -131,29 +131,30 @@ namespace InDaCompany.Data.Implementation
             conn.Open();
             cmd.ExecuteNonQuery();
         }
-        public Utente GetByCredentials(string us, string pw)
+        public async Task<Utente> GetByEmail(string email)
+{
+    using var conn = CreateConnection();
+    using var cmd = new SqlCommand(
+        "SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione " +
+        "FROM Utenti WHERE Email = @Email", conn);
+    cmd.Parameters.AddWithValue("@Email", email);
+    
+    await conn.OpenAsync();
+    using var reader = await cmd.ExecuteReaderAsync();
+    if (await reader.ReadAsync())
+    {
+        return new Utente
         {
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione " +
-                "FROM Utenti WHERE Email = @Email AND PasswordHash = @PasswordHash", conn);
-            cmd.Parameters.AddWithValue("@Email", us);
-            cmd.Parameters.AddWithValue("@PasswordHash", pw);
-            conn.Open();
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                return new Utente
-                {
-                    ID = reader.GetInt32(0),
-                    Nome = reader.GetString(1),
-                    Cognome = reader.GetString(2),
-                    Email = reader.GetString(3),
-                    PasswordHash = reader.GetString(4),
-                    Ruolo = reader.GetString(5),
-                    Team = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    DataCreazione = reader.GetDateTime(7)
-                };
-            }
-            return null;
-        }
+            ID = reader.GetInt32(0),
+            Nome = reader.GetString(1),
+            Cognome = reader.GetString(2),
+            Email = reader.GetString(3),
+            PasswordHash = reader.GetString(4),
+            Ruolo = reader.GetString(5),
+            Team = reader.IsDBNull(6) ? null : reader.GetString(6),
+            DataCreazione = reader.GetDateTime(7)
+        };
+    }
+    return null;
+}
     }
