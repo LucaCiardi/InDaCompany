@@ -39,7 +39,7 @@ namespace InDaCompany.Data.Implementation
                     Nome = reader.GetString(1),
                     Cognome = reader.GetString(2),
                     Email = reader.GetString(3),
-                    PasswordHash = reader.GetString(4),
+                    PasswordHash = reader.GetSqlBinary(4).Value,
                     Ruolo = reader.GetString(5),
                     Team = reader.IsDBNull(6) ? null : reader.GetString(6),
                     DataCreazione = reader.GetDateTime(7)
@@ -63,7 +63,7 @@ namespace InDaCompany.Data.Implementation
                     Nome = reader.GetString(1),
                     Cognome = reader.GetString(2),
                     Email = reader.GetString(3),
-                    PasswordHash = reader.GetString(4),
+                    PasswordHash = reader.GetSqlBinary(4).Value,
                     Ruolo = reader.GetString(5),
                     Team = reader.IsDBNull(6) ? null : reader.GetString(6),
                     DataCreazione = reader.GetDateTime(7)
@@ -89,7 +89,7 @@ namespace InDaCompany.Data.Implementation
                 cmd.Parameters.AddWithValue("@Nome", entity.Nome);
                 cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
                 cmd.Parameters.AddWithValue("@Email", entity.Email);
-                cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
+                cmd.Parameters.AddWithValue("@PasswordHash", $"HASHBYTES('SHA2_512','{entity.PasswordHash}')");
                 cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
                 cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
                 
@@ -122,7 +122,7 @@ namespace InDaCompany.Data.Implementation
             cmd.Parameters.AddWithValue("@Nome", entity.Nome);
             cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
             cmd.Parameters.AddWithValue("@Email", entity.Email);
-            cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
+            cmd.Parameters.AddWithValue("@PasswordHash", $"HASHBYTES('SHA2_512','{entity.PasswordHash}')");
             cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
             cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
            
