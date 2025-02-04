@@ -4,21 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 
 
 namespace InDaCompany.Controllers;
-
+[Authorize]
 public class UtentiController : Controller
 {
-    private readonly DAOUtenti _daoUtenti;
+    private readonly IDAOUtenti _daoUtenti;
 
-    public UtentiController(IConfiguration configuration)
+    public UtentiController(IConfiguration configuration, IDAOUtenti daoUtenti)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        _daoUtenti = new DAOUtenti(connectionString);
+        _daoUtenti = daoUtenti;
     }
 
     public IActionResult Index()
     {
         var utente = _daoUtenti.GetAll();
-        return View(utente);
+        return View(utenti);
     }
 
     public IActionResult Create()
@@ -35,16 +34,16 @@ public class UtentiController : Controller
             try
             {
                 _daoUtenti.Insert(utente);
-                TempData["Success"] = "Thread created successfully!";
+                TempData["Success"] = "Utente creato con successo!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error creating thread: {ex.Message}";
+                TempData["Error"] = $"Errore nella creazione del thread: {ex.Message}";
+                return View(utente);
             }
         }
 
-        ViewBag.Negozi = _daoUtenti.GetAll();
         return View(utente);
     }
     public IActionResult Edit(int id)
@@ -54,7 +53,7 @@ public class UtentiController : Controller
         {
             return NotFound();
         }
-        return View(""); // vuole una stringa, se scrivo View(utente) mi da errore
+        return View(utente); 
     }
 
     [HttpPost]
@@ -71,13 +70,14 @@ public class UtentiController : Controller
             try
             {
                 _daoUtenti.Update(utente);
-                TempData["Success"] = "User updated successfully";
+                TempData["Success"] = "Utente modificato con successo";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error updating user: {ex.Message}";
+                TempData["Error"] = $"Errore durante la modifica dell'utente: {ex.Message}";
+                return View(utente);
             }
-            return RedirectToAction(nameof(Index));
         }
         return View(utente);
     }
@@ -89,7 +89,7 @@ public class UtentiController : Controller
         {
             return NotFound();
         }
-        return View("");
+        return View(utente);
     }
 
     [HttpPost, ActionName("Delete")]
@@ -99,12 +99,13 @@ public class UtentiController : Controller
         try
         {
             _daoUtenti.Delete(id);
-            TempData["Success"] = "Thread deleted successfully";
+            TempData["Success"] = "Utente cancellato con successo";
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Error deleting thread: {ex.Message}";
+            TempData["Error"] = $"Errore durante la cancellazione dell'utente: {ex.Message}";
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Index));
     }
 }
