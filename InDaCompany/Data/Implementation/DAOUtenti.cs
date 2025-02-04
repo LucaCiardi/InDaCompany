@@ -1,4 +1,5 @@
 ﻿using InDaCompany.Data.Interfaces;
+using InDaCompany.Models;
 using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementation
@@ -48,6 +49,7 @@ namespace InDaCompany.Data.Implementation
             return utenti;
         }
 
+
         public Utente GetById(int id)
         {
             using var conn = CreateConnection();
@@ -89,7 +91,7 @@ namespace InDaCompany.Data.Implementation
                 cmd.Parameters.AddWithValue("@Nome", entity.Nome);
                 cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
                 cmd.Parameters.AddWithValue("@Email", entity.Email);
-                cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
+                cmd.Parameters.AddWithValue("@PasswordHash", $"HASHBYTES('SHA2_512','{entity.PasswordHash}')");
                 cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
                 cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
                 
@@ -122,12 +124,37 @@ namespace InDaCompany.Data.Implementation
             cmd.Parameters.AddWithValue("@Nome", entity.Nome);
             cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
             cmd.Parameters.AddWithValue("@Email", entity.Email);
-            cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
+            cmd.Parameters.AddWithValue("@PasswordHash", $"HASHBYTES('SHA2_512','{entity.PasswordHash}')");
             cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
             cmd.Parameters.AddWithValue("@Team", (object)entity.Team ?? DBNull.Value);
            
             conn.Open();
             cmd.ExecuteNonQuery();
         }
+        public async Task<Utente> GetByEmail(string email)
+{
+    using var conn = CreateConnection();
+    using var cmd = new SqlCommand(
+        "SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione " +
+        "FROM Utenti WHERE Email = @Email", conn);
+    cmd.Parameters.AddWithValue("@Email", email);
+    
+    await conn.OpenAsync();
+    using var reader = await cmd.ExecuteReaderAsync();
+    if (await reader.ReadAsync())
+    {
+        return new Utente
+        {
+            ID = reader.GetInt32(0),
+            Nome = reader.GetString(1),
+            Cognome = reader.GetString(2),
+            Email = reader.GetString(3),
+            PasswordHash = reader.GetString(4),
+            Ruolo = reader.GetString(5),
+            Team = reader.IsDBNull(6) ? null : reader.GetString(6),
+            DataCreazione = reader.GetDateTime(7)
+        };
     }
+    return null;
 }
+    }

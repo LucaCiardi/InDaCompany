@@ -1,4 +1,4 @@
-﻿using InDaCompany.Data.Implementation;
+﻿using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,15 +8,18 @@ namespace InDaCompany.Controllers;
 public class UtentiController : Controller
 {
     private readonly IDAOUtenti _daoUtenti;
+    private readonly IConfiguration _configuration;
+
 
     public UtentiController(IConfiguration configuration, IDAOUtenti daoUtenti)
     {
         _daoUtenti = daoUtenti;
+        _configuration = configuration;
     }
 
     public IActionResult Index()
     {
-        var utente = _daoUtenti.GetAll();
+        var utenti = _daoUtenti.GetAll();
         return View(utenti);
     }
 
@@ -53,7 +56,7 @@ public class UtentiController : Controller
         {
             return NotFound();
         }
-        return View(utente); 
+        return View(utente);
     }
 
     [HttpPost]
@@ -107,5 +110,54 @@ public class UtentiController : Controller
             TempData["Error"] = $"Errore durante la cancellazione dell'utente: {ex.Message}";
             return RedirectToAction(nameof(Index));
         }
+    }
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(string email, string password)
+    {
+        try
+        {
+            var user = await _daoUtenti.GetByEmail(email);
+            if (user == null)
+            {
+                TempData["Error"] = "Credenziali non valide";
+                return RedirectToAction("Login");
+            }
+
+            if (!VerifyPassword(password, user.PasswordHash))
+            {
+                TempData["Error"] = "Credenziali non valide";
+                return RedirectToAction("Login");
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, user.Ruolo),
+                new Claim("UserId", user.ID.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            TempData["Success"] = $"Welcome {user.Nome} {user.Cognome}";
+            return RedirectToAction("Index", "Home");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = "C'è stato un errore durante il login";
+            return RedirectToAction("Login");
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Index", "Home");
     }
 }
