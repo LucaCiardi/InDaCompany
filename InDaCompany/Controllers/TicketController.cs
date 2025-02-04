@@ -21,7 +21,7 @@ public class TicketController : BaseController
     }
     public ActionResult Create()
     {
-        return View();
+        return View(new Ticket { Stato = "Aperto" });
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -31,12 +31,13 @@ public class TicketController : BaseController
         {
             try
             {
+                ticket.Stato = "Aperto";
                 _daoTicket.Insert(ticket);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception)
             {
-                ModelState.AddModelError("", "Unable to save changes. Try again.");
+                ModelState.AddModelError("", "Impossibile salvare le modifiche. Riprovare.");
             }
         }
         return View(ticket);
@@ -53,16 +54,20 @@ public class TicketController : BaseController
     [ValidateAntiForgeryToken]
     public ActionResult Edit(Ticket ticket)
     {
+        var originalTicket = _daoTicket.GetById(ticket.ID);
+        if (originalTicket == null) return NotFound();
         if (ModelState.IsValid)
         {
             try
             {
+                ticket.DataApertura = originalTicket.DataApertura;
+                ticket.CreatoDaID = originalTicket.CreatoDaID;
                 _daoTicket.Update(ticket);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception)
             {
-                ModelState.AddModelError("", "Unable to save changes. Try again.");
+                ModelState.AddModelError("", "Impossibile salvare le modifiche. Riprovare.");
             }
         }
         return View(ticket);
@@ -82,6 +87,8 @@ public class TicketController : BaseController
     {
         try
         {
+            var ticket = _daoTicket.GetById(id);
+            if (ticket == null) return NotFound();
             _daoTicket.Delete(id);
             return RedirectToAction(nameof(Index));
         }
@@ -91,6 +98,31 @@ public class TicketController : BaseController
         }
     }
 
-    // non so come impostare il fatto che si veda lo stato del ticket
+    public ActionResult ByCreator(int creatorId)
+    {
+        var tickets = _daoTicket.GetByCreatoDaID(creatorId);
+        return View("Index", tickets);
+    }
+
+    public ActionResult ByAssignee(int assigneeId)
+    {
+        var tickets = _daoTicket.GetByAssegnatoAID(assigneeId);
+        return View("Index", tickets);
+    }
+
+    public ActionResult ByStatus(string status)
+    {
+        var tickets = _daoTicket.GetByStato(status);
+        return View("Index", tickets);
+    }
+
+    public ActionResult Search(string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return RedirectToAction(nameof(Index));
+            
+        var tickets = _daoTicket.Search(term);
+        return View("Index", tickets);
+    }
 
 }
