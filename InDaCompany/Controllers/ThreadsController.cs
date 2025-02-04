@@ -5,18 +5,18 @@ namespace InDaCompany.Controllers;
 
 public class ThreadsController : Controller
 {
-    private readonly DAOThreads _daoThreads;
+    private readonly IDAOThreads _daoThreads;
 
-    public ThreadsController(IConfiguration configuration)
+    public ThreadsController(IConfiguration configuration, IDAOThreads daoThreads)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        _daoThreads = new DAOThreads(connectionString);
+        _daoThreads = daoThreads;
     }
 
     public IActionResult Index()
     {
         var thread = _daoThreads.GetAll();
-        return View(thread);
+        return View(threads);
     }
 
     public IActionResult Create()
@@ -32,17 +32,16 @@ public class ThreadsController : Controller
         {
             try
             {
-                _daoThreads.Insert(thread);
-                TempData["Success"] = "Thread created successfully!";
+                _daoThreads.Insert(thread, thread.ForumID, User.GetUserId());
+                TempData["Success"] = "Thread creato con successo!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error creating thread: {ex.Message}";
+                TempData["Error"] = $"Errore nella creazione del thread: {ex.Message}";
+                return View(thread);
             }
         }
-
-        ViewBag.Negozi = _daoThreads.GetAll();
         return View(thread);
     }
     public IActionResult Edit(int id)
@@ -59,7 +58,7 @@ public class ThreadsController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Edit(int id, Thread thread)
     {
-        if (id != thread.ManagedThreadId)
+        if (id != thread.ID)
         {
             return NotFound();
         }
@@ -69,13 +68,14 @@ public class ThreadsController : Controller
             try
             {
                 _daoThreads.Update(thread);
-                TempData["Success"] = "Thread updated successfully";
+                TempData["Success"] = "Thread modificato con successo";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error updating thread: {ex.Message}";
+                TempData["Error"] = $"Errore durante la modifica del thread: {ex.Message}";
+                return View(thread);
             }
-            return RedirectToAction(nameof(Index));
         }
         return View(thread);
     }
@@ -97,11 +97,11 @@ public class ThreadsController : Controller
         try
         {
             _daoThreads.Delete(id);
-            TempData["Success"] = "Thread deleted successfully";
+            TempData["Success"] = "Thread eliminato con successo";
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Error deleting thread: {ex.Message}";
+            TempData["Error"] = $"Errore durante l'eliminazione del thread: {ex.Message}";
         }
         return RedirectToAction(nameof(Index));
     }
