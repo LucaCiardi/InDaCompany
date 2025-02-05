@@ -1,6 +1,6 @@
 namespace InDaCompany.Data.Implementation {
 
-    public DAOLikes : DAOBase, IDAOLikes {
+    public DAOLikes : DAOBase<Like>, IDAOLikes {
 
         public DAOLikes(string connectionString) : base(connectionString) {
 
@@ -40,7 +40,17 @@ namespace InDaCompany.Data.Implementation {
 
             cmd.Parameters.AddWithValue("@PostId", postID);
             conn.Open();
-            cmd.ExecuteNonQuery();
+            return (int)cmd.ExecuteScalar();
+        }
+        protected override Like MapFromReader(SqlDataReader reader)
+        {
+            return new Like
+            {
+                ID = reader.GetInt32(reader.GetOrdinal("ID")),
+                UtenteID = reader.GetInt32(reader.GetOrdinal("UtenteID")),
+                PostID = reader.GetInt32(reader.GetOrdinal("PostID")),
+                MiPiace = reader.GetBoolean(reader.GetOrdinal("MiPiace"))
+            };
         }
     }
 }
