@@ -1,16 +1,17 @@
 ﻿using InDaCompany.Models;
 
-namespace InDaCompany.Data.Interfaces;
-
-public interface IDAOTicket : IBaseDao<Ticket>
+namespace InDaCompany.Data.Interfaces
 {
-    public List<Ticket> GetByCreatoDaID(int creatoDaID);
+    public interface IDAOTicket : IDAOBase<Ticket>
+    {
+        Task<List<Ticket>> GetByCreatoDaIDAsync(int creatoDaID);
 
-    public List<Ticket> GetByAssegnatoAID(int assegnatoAID);
+        Task<List<Ticket>> GetByAssegnatoAIDAsync(int assegnatoAID);
 
-    public List<Ticket> GetByStato(string stato);
+        Task<List<Ticket>> GetByStatoAsync(string stato);
 
-    public List<Ticket> GetByDate(DateTime data);
+        Task<List<Ticket>> GetByDateAsync(DateTime data);
 
-    public List<Ticket> Search(string searchTerm);
+        Task<List<Ticket>> SearchAsync(string searchTerm);
+    }
 }

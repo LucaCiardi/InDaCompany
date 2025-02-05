@@ -4,29 +4,48 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(
+        IConfiguration configuration,
+        ILogger<HomeController> logger) : BaseController(configuration, logger)
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
-            return View();
+            try
+            {
+                logger.LogInformation("Accessing home page");
+                return View();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error accessing home page");
+                return HandleException(ex);
+            }
         }
 
         public IActionResult Privacy()
         {
-            return View();
+            try
+            {
+                logger.LogInformation("Accessing privacy page");
+                return View();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error accessing privacy page");
+                return HandleException(ex);
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var errorViewModel = new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            };
+
+            logger.LogError("Error page accessed. RequestId: {RequestId}", errorViewModel.RequestId);
+            return View(errorViewModel);
         }
     }
 }

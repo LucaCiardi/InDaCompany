@@ -1,7 +1,18 @@
+using InDaCompany.Data.Implementations;
+using InDaCompany.Data.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IDAOUtenti, DAOUtenti>();
+builder.Services.AddScoped<IDAOPost, DAOPost>();
+builder.Services.AddScoped<IDAOForum, DAOForum>();
+builder.Services.AddScoped<IDAOThreadForum, DAOThreadForum>();
+builder.Services.AddScoped<IDAOMessaggiThread, DAOMessaggiThread>();
+builder.Services.AddScoped<IDAOTicket, DAOTicket>();
+
+builder.Services.AddAuthentication().AddCookie();
 
 var app = builder.Build();
 
@@ -18,6 +29,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

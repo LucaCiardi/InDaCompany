@@ -2,18 +2,19 @@
 
 namespace InDaCompany.Models
 {
-    public class MessaggioThread
+    public class ThreadForum
     {
         public int ID { get; set; }
 
         [Required]
-        public int ThreadID { get; set; }
+        [StringLength(255)]
+        public string Titolo { get; set; } = null!;
+
+        [Required]
+        public int ForumID { get; set; }
 
         [Required]
         public int AutoreID { get; set; }
-
-        [Required]
-        public string Testo { get; set; } = null!;
 
         public DateTime DataCreazione { get; set; }
     }
