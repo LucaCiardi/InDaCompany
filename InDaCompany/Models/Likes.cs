@@ -1,10 +1,10 @@
 namespace InDaCompany.Models
 {
-    public class Likes
+    public class Like
     {
-        public int Id { get; set;}
+        public int ID { get; set;}
         public int UtenteID { get; set;}
         public int PostID { get; set;}
-        public bool IsLiked { get; set;}
+        public bool MiPiace { get; set;}
     }
 }
