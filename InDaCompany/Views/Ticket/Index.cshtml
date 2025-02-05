@@ -1,0 +1,41 @@
+@model IEnumerable<InDaCompany.Models.Ticket>
+
+@{
+    ViewData["Title"] = "Ticket";
+}
+
+<div class="text-center mb-5">
+    <h2 class="display-4 text-white">
+        <i class="bi bi-ticket-detailed"></i> Ticket System
+        </h2>
+</div>
+
+<div class="row-md">
+    <form asp-action="Index" method="get">
+        <input type="text" name="searchBar" class="form-control" placeholder="Cerca...">
+        <button class="btn btn-dark"><i class="bi bi-search"></i></button>
+    </form>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Utente</th>
+            <th>Descrizione</th>
+            <th>Stato</th>
+            <th>Data Apertura</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model) {
+            <tr>
+                <td>@item.ID</td>
+                <td>@item.CreatoDaID</td>
+                <td>@item.Descrizione</td>
+                <td>@item.Stato</td>
+                <td>@item.DataApertura</td>
+            </tr>
+        }
+    </tbody>
+</table>
