@@ -1,13 +1,20 @@
-﻿namespace InDaCompany.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace InDaCompany.Models
 {
     public class Ticket
     {
         public int ID { get; set; }
 
-        public string Descrizione { get; set; }
+        [Required]
+        public string Descrizione { get; set; } = null!;
 
-        public string Stato { get; set; }
+        [Required]
+        [StringLength(20)]
+        [RegularExpression("^(Aperto|In lavorazione|Chiuso)$")]
+        public string Stato { get; set; } = null!;
 
+        [Required]
         public int CreatoDaID { get; set; }
 
         public int? AssegnatoAID { get; set; }

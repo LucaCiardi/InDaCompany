@@ -1,163 +1,187 @@
-﻿using InDaCompany.Data.Interfaces;
+﻿using InDaCompany.Data.Implementations;
+using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-
-namespace InDaCompany.Controllers;
-[Authorize]
-public class UtentiController : Controller
+namespace InDaCompany.Controllers
 {
-    private readonly IDAOUtenti _daoUtenti;
-    private readonly IConfiguration _configuration;
-
-
-    public UtentiController(IConfiguration configuration, IDAOUtenti daoUtenti)
+    [Authorize(Roles = "Admin")]
+    public class UtentiController(
+        IConfiguration configuration,
+        IDAOUtenti DAOUtenti,
+        ILogger<UtentiController> logger) : BaseController(configuration, logger)
     {
-        _daoUtenti = daoUtenti;
-        _configuration = configuration;
-    }
+        private readonly IDAOUtenti _daoUtenti = DAOUtenti;
 
-    public IActionResult Index()
-    {
-        var utenti = _daoUtenti.GetAll();
-        return View(utenti);
-    }
-
-    public IActionResult Create()
-    {
-        return View(new Utente());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(Utente utente)
-    {
-        if (ModelState.IsValid)
+        public async Task<IActionResult> Index()
         {
             try
             {
-                _daoUtenti.Insert(utente);
-                TempData["Success"] = "Utente creato con successo!";
-                return RedirectToAction(nameof(Index));
+                var utenti = await _daoUtenti.GetAllAsync();
+                return View(utenti);
             }
-            catch (Exception ex)
+            catch (DAOException ex)
             {
-                TempData["Error"] = $"Errore nella creazione del thread: {ex.Message}";
-                return View(utente);
+                logger.LogError(ex, "Error retrieving users");
+                return HandleException(ex);
             }
         }
 
-        return View(utente);
-    }
-    public IActionResult Edit(int id)
-    {
-        var utente = _daoUtenti.GetById(id);
-        if (utente == null)
+        public IActionResult Create()
         {
-            return NotFound();
-        }
-        return View(utente);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Utente utente)
-    {
-        if (id != utente.ID)
-        {
-            return NotFound();
+            return View(new Utente());
         }
 
-        if (ModelState.IsValid)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Utente utente)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _daoUtenti.InsertAsync(utente);
+                    logger.LogInformation("User created successfully: {Email}", utente.Email);
+                    TempData["Success"] = "Utente creato con successo!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DAOException ex)
+                {
+                    logger.LogError(ex, "Error creating user: {Email}", utente.Email);
+                    TempData["Error"] = "Errore nella creazione dell'utente";
+                    return View(utente);
+                }
+            }
+            return View(utente);
+        }
+
+        public async Task<IActionResult> Edit(int id)
         {
             try
             {
-                _daoUtenti.Update(utente);
-                TempData["Success"] = "Utente modificato con successo";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Errore durante la modifica dell'utente: {ex.Message}";
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    logger.LogWarning("User not found: {Id}", id);
+                    return NotFound();
+                }
                 return View(utente);
             }
-        }
-        return View(utente);
-    }
-
-    public IActionResult Delete(int id)
-    {
-        var utente = _daoUtenti.GetById(id);
-        if (utente == null)
-        {
-            return NotFound();
-        }
-        return View(utente);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
-    {
-        try
-        {
-            _daoUtenti.Delete(id);
-            TempData["Success"] = "Utente cancellato con successo";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = $"Errore durante la cancellazione dell'utente: {ex.Message}";
-            return RedirectToAction(nameof(Index));
-        }
-    }
-    [AllowAnonymous]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string email, string password)
-    {
-        try
-        {
-            var user = await _daoUtenti.GetByEmail(email);
-            if (user == null)
+            catch (DAOException ex)
             {
-                TempData["Error"] = "Credenziali non valide";
-                return RedirectToAction("Login");
+                logger.LogError(ex, "Error retrieving user for edit: {Id}", id);
+                return HandleException(ex);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Utente utente)
+        {
+            if (id != utente.ID)
+            {
+                return NotFound();
             }
 
-            if (!VerifyPassword(password, user.PasswordHash))
+            if (ModelState.IsValid)
             {
-                TempData["Error"] = "Credenziali non valide";
-                return RedirectToAction("Login");
+                try
+                {
+                    var existingUser = await _daoUtenti.GetByIdAsync(id);
+                    if (existingUser == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (string.IsNullOrEmpty(utente.PasswordHash))
+                    {
+                        utente.PasswordHash = existingUser.PasswordHash;
+                    }
+
+                    await _daoUtenti.UpdateAsync(utente);
+                    logger.LogInformation("User updated successfully: {Id}", id);
+                    TempData["Success"] = "Utente modificato con successo";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DAOException ex)
+                {
+                    logger.LogError(ex, "Error updating user: {Id}", id);
+                    TempData["Error"] = "Errore durante la modifica dell'utente";
+                    return View(utente);
+                }
             }
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, user.Ruolo),
-                new Claim("UserId", user.ID.ToString())
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-            TempData["Success"] = $"Welcome {user.Nome} {user.Cognome}";
-            return RedirectToAction("Index", "Home");
+            return View(utente);
         }
-        catch (Exception ex)
+
+        public async Task<IActionResult> Delete(int id)
         {
-            TempData["Error"] = "C'è stato un errore durante il login";
-            return RedirectToAction("Login");
-        }
-    }
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    logger.LogWarning("User not found for deletion: {Id}", id);
+                    return NotFound();
+                }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index", "Home");
+                if (utente.Ruolo == "Admin" && !await HasOtherAdminsAsync(id))
+                {
+                    TempData["Error"] = "Impossibile eliminare l'ultimo amministratore";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View(utente);
+            }
+            catch (DAOException ex)
+            {
+                logger.LogError(ex, "Error retrieving user for deletion: {Id}", id);
+                return HandleException(ex);
+            }
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    return NotFound();
+                }
+
+                if (utente.Ruolo == "Admin" && !await HasOtherAdminsAsync(id))
+                {
+                    TempData["Error"] = "Impossibile eliminare l'ultimo amministratore";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                await _daoUtenti.DeleteAsync(id);
+                logger.LogInformation("User deleted successfully: {Id}", id);
+                TempData["Success"] = "Utente eliminato con successo";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DAOException ex)
+            {
+                logger.LogError(ex, "Error deleting user: {Id}", id);
+                TempData["Error"] = "Errore durante l'eliminazione dell'utente";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private async Task<bool> HasOtherAdminsAsync(int currentUserId)
+        {
+            try
+            {
+                var allUsers = await _daoUtenti.GetAllAsync();
+                return allUsers.Any(u => u.Ruolo == "Admin" && u.ID != currentUserId);
+            }
+            catch (DAOException)
+            {
+                return true;
+            }
+        }
     }
 }

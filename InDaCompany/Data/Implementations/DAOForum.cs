@@ -1,87 +1,138 @@
 ﻿using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using Microsoft.Data.SqlClient;
-namespace InDaCompany.Data.Implementations;
 
-public class DAOForum : BaseDao<Forum>, IDAOForum
+namespace InDaCompany.Data.Implementations
 {
-    public DAOForum(string connectionString) : base(connectionString) { }
-    public List<Forum> GetAll()
+    public class DAOForum(string connectionString) : DAOBase<Forum>(connectionString), IDAOForum
     {
-        var forums = new List<Forum>();
-        using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Nome, Descrizione, Team FROM Forum", conn);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        public async Task<List<Forum>> GetAllAsync()
         {
-            forums.Add(new Forum
-            {
-                ID = reader.GetInt32(0),
-                Nome = reader.GetString(1),
-                Descrizione = reader.IsDBNull(2) ? null : reader.GetString(2),
-                Team = reader.IsDBNull(3) ? null : reader.GetString(3)
-            });
-        }
-        return forums;
-    }
+            const string query = "SELECT ID, Nome, Descrizione, Team FROM Forum";
+            var forums = new List<Forum>();
 
-    public Forum GetById(int id)
-    {
-        using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Nome, Descrizione, Team FROM Forum WHERE ID = @ID", conn);
-        cmd.Parameters.AddWithValue("@Id", id);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        if (reader.Read())
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            try
+            {
+                await conn.OpenAsync();
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    forums.Add(MapFromReader(reader));
+                }
+                return forums;
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Error retrieving forums", ex);
+            }
+        }
+
+        public async Task<Forum?> GetByIdAsync(int id)
+        {
+            const string query = "SELECT ID, Nome, Descrizione, Team FROM Forum WHERE ID = @ID";
+            var parameters = new[] { new SqlParameter("@ID", id) };
+
+            return await ExecuteQuerySingleAsync(query, parameters);
+        }
+
+        public async Task<int> InsertAsync(Forum forum)
+        {
+            const string query = @"
+                INSERT INTO Forum (Nome, Descrizione, Team) 
+                VALUES (@Nome, @Descrizione, @Team);
+                SELECT SCOPE_IDENTITY();";
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@Nome", forum.Nome);
+            cmd.Parameters.AddWithValue("@Descrizione", (object?)forum.Descrizione ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Team", (object?)forum.Team ?? DBNull.Value);
+
+            try
+            {
+                await conn.OpenAsync();
+                var result = await cmd.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Error inserting forum", ex);
+            }
+        }
+
+        public async Task UpdateAsync(Forum forum)
+        {
+            const string query = @"
+                UPDATE Forum 
+                SET Nome = @Nome, 
+                    Descrizione = @Descrizione, 
+                    Team = @Team 
+                WHERE ID = @ID";
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@ID", forum.ID);
+            cmd.Parameters.AddWithValue("@Nome", forum.Nome);
+            cmd.Parameters.AddWithValue("@Descrizione", (object?)forum.Descrizione ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Team", (object?)forum.Team ?? DBNull.Value);
+
+            try
+            {
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Error updating forum", ex);
+            }
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            const string query = "DELETE FROM Forum WHERE ID = @ID";
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@ID", id);
+
+            try
+            {
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Error deleting forum", ex);
+            }
+        }
+
+        public async Task<bool> ExistsAsync(int id)
+        {
+            const string query = "SELECT 1 FROM Forum WHERE ID = @ID";
+            var parameters = new[] { new SqlParameter("@ID", id) };
+
+            return await ExistsAsync(query, parameters);
+        }
+
+        protected override Forum MapFromReader(SqlDataReader reader)
         {
             return new Forum
             {
-                ID = reader.GetInt32(0),
-                Nome = reader.GetString(1),
-                Descrizione = reader.IsDBNull(2) ? null : reader.GetString(2),
-                Team = reader.IsDBNull(3) ? null : reader.GetString(3)
+                ID = reader.GetInt32(reader.GetOrdinal("ID")),
+                Nome = reader.GetString(reader.GetOrdinal("Nome")),
+                Descrizione = reader.IsDBNull(reader.GetOrdinal("Descrizione"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("Descrizione")),
+                Team = reader.IsDBNull(reader.GetOrdinal("Team"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("Team"))
             };
         }
-        return null;
     }
-
-    public void Insert(Forum forum)
-    {
-        using var conn = CreateConnection();
-        using var cmd = new SqlCommand("INSERT INTO Forum (Nome, Descrizione, Team) VALUES (@Nome, @Descrizione, @Team)", conn);
-        cmd.Parameters.AddWithValue("@Nome", forum.Nome);
-        cmd.Parameters.AddWithValue("@Descrizione", forum.Descrizione);
-        cmd.Parameters.AddWithValue("@Team", forum.Team);
-        conn.Open();
-        cmd.ExecuteNonQuery();
-    }
-
-    public void Update(Forum forum)
-    {
-        using var conn = CreateConnection();
-        using var cmd =
-            new SqlCommand("UPDATE Forum SET Nome = @Nome, Descrizione = @Descrizione, Team = @Team WHERE ID = @ID",
-                conn);
-        cmd.Parameters.AddWithValue("@ID", forum.ID);
-        cmd.Parameters.AddWithValue("@Nome", forum.Nome);
-        cmd.Parameters.AddWithValue("@Descrizione", forum.Descrizione);
-        cmd.Parameters.AddWithValue("@Team", forum.Team);
-        conn.Open();
-        cmd.ExecuteNonQuery();
-    }
-    public void Delete(int id)
-    {
-        using var conn = CreateConnection();
-        using var cmd = new SqlCommand("DELETE FROM Forum WHERE ID = @ID", conn);
-        cmd.Parameters.AddWithValue("@ID", id);
-        conn.Open();
-        cmd.ExecuteNonQuery();
-    }
-    public bool Exists(int id)
-    {
-        return Exists("SELECT 1 FROM Forum WHERE ID = @ID",
-            new[] { new SqlParameter("@ID", id) });
-    }
-
 }

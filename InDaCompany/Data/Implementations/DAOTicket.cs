@@ -4,212 +4,282 @@ using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementations;
 
-public class DAOTicket : BaseDao<Ticket>, IDAOTicket
+public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionString), IDAOTicket
 {
-    public DAOTicket(string connectionString) : base(connectionString) { }
-
-    public List<Ticket> GetAll()
+    public async Task<List<Ticket>> GetAllAsync()
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket", conn);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        using var cmd = new SqlCommand(query, conn);
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException("Error retrieving tickets", ex);
+        }
     }
 
-    public Ticket GetById(int id)
+    public async Task<Ticket?> GetByIdAsync(int id)
     {
-        using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket WHERE ID = @ID", conn);
-        cmd.Parameters.AddWithValue("@Id", id);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        if (reader.Read())
-        {
-            return new Ticket
-            {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            };
-        }
-        return null;
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE ID = @ID";
+        var parameters = new[] { new SqlParameter("@ID", id) };
+
+        return await ExecuteQuerySingleAsync(query, parameters);
     }
 
-    public List<Ticket> GetByCreatoDaID(int creatoDaID)
+    public async Task<List<Ticket>> GetByCreatoDaIDAsync(int creatoDaID)
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE CreatoDaID = @CreatoDaID";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket WHERE CreatoDaID = @CreatoDaID", conn);
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@CreatoDaID", creatoDaID);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error retrieving tickets for creator {creatoDaID}", ex);
+        }
     }
 
-    public List<Ticket> GetByAssegnatoAID(int assegnatoAID)
+    public async Task<List<Ticket>> GetByAssegnatoAIDAsync(int assegnatoAID)
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE AssegnatoAID = @AssegnatoAID";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket WHERE AssegnatoAID = @AssegnatoAID", conn);
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@AssegnatoAID", assegnatoAID);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error retrieving tickets assigned to {assegnatoAID}", ex);
+        }
     }
-    public List<Ticket> GetByStato(string stato)
+
+    public async Task<List<Ticket>> GetByStatoAsync(string stato)
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE Stato = @Stato";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket WHERE Stato = @Stato", conn);
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@Stato", stato);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error retrieving tickets with state {stato}", ex);
+        }
     }
 
-    public List<Ticket> GetByDate(DateTime data)
+    public async Task<List<Ticket>> GetByDateAsync(DateTime data)
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE CAST(DataApertura AS DATE) = @DataApertura";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket WHERE DataApertura = @DataApertura", conn);
-        cmd.Parameters.AddWithValue("@DataApertura", data);
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@DataApertura", data.Date);
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error retrieving tickets for date {data:d}", ex);
+        }
     }
 
-    public List<Ticket> Search(string searchTerm)
+    public async Task<List<Ticket>> SearchAsync(string searchTerm)
     {
+        const string query = @"
+            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            FROM Ticket 
+            WHERE Descrizione LIKE @SearchTerm 
+               OR Stato LIKE @SearchTerm";
         var tickets = new List<Ticket>();
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand(
-            "SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura FROM Ticket " +
-            "WHERE Descrizione LIKE @SearchTerm OR Stato LIKE @SearchTerm", conn);
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@SearchTerm", $"%{searchTerm}%");
-        conn.Open();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+
+        try
         {
-            tickets.Add(new Ticket
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                ID = reader.GetInt32(0),
-                Descrizione = reader.GetString(1),
-                Stato = reader.GetString(2),
-                CreatoDaID = reader.GetInt32(3),
-                AssegnatoAID = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                DataApertura = reader.GetDateTime(5)
-            });
+                tickets.Add(MapFromReader(reader));
+            }
+            return tickets;
         }
-        return tickets;
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error searching tickets with term '{searchTerm}'", ex);
+        }
     }
 
-    public void Insert(Ticket ticket)
+    public async Task<int> InsertAsync(Ticket ticket)
     {
+        const string query = @"
+            INSERT INTO Ticket (Descrizione, Stato, CreatoDaID, AssegnatoAID) 
+            VALUES (@Descrizione, @Stato, @CreatoDaID, @AssegnatoAID);
+            SELECT SCOPE_IDENTITY();";
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand(
-            "INSERT INTO Ticket (Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura) VALUES (@Descrizione, @Stato, @CreatoDaID, @AssegnatoAID, @DataApertura)", conn);
+        using var cmd = new SqlCommand(query, conn);
+
         cmd.Parameters.AddWithValue("@Descrizione", ticket.Descrizione);
         cmd.Parameters.AddWithValue("@Stato", ticket.Stato);
         cmd.Parameters.AddWithValue("@CreatoDaID", ticket.CreatoDaID);
-        cmd.Parameters.AddWithValue("@AssegnatoAID", ticket.AssegnatoAID);
-        cmd.Parameters.AddWithValue("@DataApertura", ticket.DataApertura);
-        conn.Open();
-        cmd.ExecuteNonQuery();
+        cmd.Parameters.AddWithValue("@AssegnatoAID", (object?)ticket.AssegnatoAID ?? DBNull.Value);
 
+        try
+        {
+            await conn.OpenAsync();
+            var result = await cmd.ExecuteScalarAsync();
+            return Convert.ToInt32(result);
+        }
+        catch (SqlException ex)
+        {
+            throw new DAOException("Error inserting ticket", ex);
+        }
     }
 
-    public void Update(Ticket ticket)
+    public async Task UpdateAsync(Ticket ticket)
     {
+        const string query = @"
+            UPDATE Ticket 
+            SET Descrizione = @Descrizione, 
+                Stato = @Stato, 
+                CreatoDaID = @CreatoDaID, 
+                AssegnatoAID = @AssegnatoAID 
+            WHERE ID = @ID";
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand(
-            "UPDATE Ticket SET Descrizione = @Descrizione, Stato = @Stato, CreatoDaID = @CreatoDaID, AssegnatoAID = @AssegnatoAID, DataApertura = @DataApertura WHERE ID = @ID", conn);
+        using var cmd = new SqlCommand(query, conn);
+
         cmd.Parameters.AddWithValue("@ID", ticket.ID);
         cmd.Parameters.AddWithValue("@Descrizione", ticket.Descrizione);
         cmd.Parameters.AddWithValue("@Stato", ticket.Stato);
         cmd.Parameters.AddWithValue("@CreatoDaID", ticket.CreatoDaID);
-        cmd.Parameters.AddWithValue("@AssegnatoAID", ticket.AssegnatoAID);
-        cmd.Parameters.AddWithValue("@DataApertura", ticket.DataApertura);
-        conn.Open();
-        cmd.ExecuteNonQuery();
+        cmd.Parameters.AddWithValue("@AssegnatoAID", (object?)ticket.AssegnatoAID ?? DBNull.Value);
+
+        try
+        {
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error updating ticket {ticket.ID}", ex);
+        }
     }
 
-    public void Delete(int id)
+    public async Task DeleteAsync(int id)
     {
+        const string query = "DELETE FROM Ticket WHERE ID = @ID";
+
         using var conn = CreateConnection();
-        using var cmd = new SqlCommand("DELETE FROM Ticket WHERE ID = @ID", conn);
+        using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@ID", id);
-        conn.Open();
-        cmd.ExecuteNonQuery();
+
+        try
+        {
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException ex)
+        {
+            throw new DAOException($"Error deleting ticket {id}", ex);
+        }
     }
 
-    public bool Exists(int id)
+    public async Task<bool> ExistsAsync(int id)
     {
-        return Exists("SELECT 1 FROM Ticket WHERE ID = @ID",
-            new[] { new SqlParameter("@ID", id) });
+        const string query = "SELECT 1 FROM Ticket WHERE ID = @ID";
+        var parameters = new[] { new SqlParameter("@ID", id) };
+
+        return await ExistsAsync(query, parameters);
+    }
+
+    protected override Ticket MapFromReader(SqlDataReader reader)
+    {
+        return new Ticket
+        {
+            ID = reader.GetInt32(reader.GetOrdinal("ID")),
+            Descrizione = reader.GetString(reader.GetOrdinal("Descrizione")),
+            Stato = reader.GetString(reader.GetOrdinal("Stato")),
+            CreatoDaID = reader.GetInt32(reader.GetOrdinal("CreatoDaID")),
+            AssegnatoAID = reader.IsDBNull(reader.GetOrdinal("AssegnatoAID"))
+                ? null
+                : reader.GetInt32(reader.GetOrdinal("AssegnatoAID")),
+            DataApertura = reader.GetDateTime(reader.GetOrdinal("DataApertura"))
+        };
     }
 }

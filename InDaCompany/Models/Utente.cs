@@ -1,19 +1,34 @@
-﻿namespace InDaCompany.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace InDaCompany.Models
 {
     public class Utente
     {
         public int ID { get; set; }
 
-        public string Nome { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Nome { get; set; } = null!;
 
-        public string Cognome { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Cognome { get; set; } = null!;
 
-        public string Email { get; set; }
+        [Required]
+        [StringLength(100)]
+        [EmailAddress]
+        public string Email { get; set; } = null!;
 
-        public string PasswordHash { get; set; }
+        [Required]
+        [StringLength(128)]
+        public string PasswordHash { get; set; } = null!;
 
-        public string Ruolo { get; set; }
+        [Required]
+        [StringLength(20)]
+        [RegularExpression("^(Dipendente|Manager|Admin)$")]
+        public string Ruolo { get; set; } = null!;
 
+        [StringLength(50)]
         public string? Team { get; set; }
 
         public DateTime DataCreazione { get; set; }
