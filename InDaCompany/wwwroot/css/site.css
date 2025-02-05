@@ -50,7 +50,7 @@ navbar-nav .nav-link i:hover{
 }
 
 footer {
-  position: relative;
+  position: absolute;
   bottom:0;
   width: 100%;
   font-size: 0.9rem;
