@@ -57,3 +57,12 @@ CREATE TABLE Ticket (
     FOREIGN KEY (CreatoDaID) REFERENCES Utenti(ID),
     FOREIGN KEY (AssegnatoAID) REFERENCES Utenti(ID)
 );
+
+CREATE TABLE Likes (
+    id INT IDENTITY PRIMARY key,
+    UtenteID INT NOT NULL,
+    PostID INT NOT NULL,
+    MiPiace BIT NOT NULL,
+    FOREIGN KEY (UtenteID) REFERENCES Utenti(ID),
+    FOREIGN KEY (PostID) REFERENCES Post(ID)
+);
