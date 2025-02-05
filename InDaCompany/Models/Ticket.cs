@@ -5,6 +5,9 @@ namespace InDaCompany.Models
     public class Ticket
     {
         public int ID { get; set; }
+        
+        [Required]
+        public string Titolo { get; set; }
 
         [Required]
         public string Descrizione { get; set; } = null!;

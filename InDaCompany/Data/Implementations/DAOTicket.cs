@@ -9,7 +9,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> GetAllAsync()
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket";
         var tickets = new List<Ticket>();
 
@@ -35,7 +35,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<Ticket?> GetByIdAsync(int id)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE ID = @ID";
         var parameters = new[] { new SqlParameter("@ID", id) };
@@ -46,7 +46,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> GetByCreatoDaIDAsync(int creatoDaID)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE CreatoDaID = @CreatoDaID";
         var tickets = new List<Ticket>();
@@ -74,7 +74,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> GetByAssegnatoAIDAsync(int assegnatoAID)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE AssegnatoAID = @AssegnatoAID";
         var tickets = new List<Ticket>();
@@ -102,7 +102,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> GetByStatoAsync(string stato)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE Stato = @Stato";
         var tickets = new List<Ticket>();
@@ -130,7 +130,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> GetByDateAsync(DateTime data)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE CAST(DataApertura AS DATE) = @DataApertura";
         var tickets = new List<Ticket>();
@@ -158,7 +158,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<List<Ticket>> SearchAsync(string searchTerm)
     {
         const string query = @"
-            SELECT ID, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
+            SELECT ID, Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura 
             FROM Ticket 
             WHERE Descrizione LIKE @SearchTerm 
                OR Stato LIKE @SearchTerm";
@@ -187,13 +187,14 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     public async Task<int> InsertAsync(Ticket ticket)
     {
         const string query = @"
-            INSERT INTO Ticket (Descrizione, Stato, CreatoDaID, AssegnatoAID) 
+            INSERT INTO Ticket (@Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID) 
             VALUES (@Descrizione, @Stato, @CreatoDaID, @AssegnatoAID);
             SELECT SCOPE_IDENTITY();";
 
         using var conn = CreateConnection();
         using var cmd = new SqlCommand(query, conn);
 
+        cmd.Parameters.AddWithValue("@Titolo", ticket.Titolo);
         cmd.Parameters.AddWithValue("@Descrizione", ticket.Descrizione);
         cmd.Parameters.AddWithValue("@Stato", ticket.Stato);
         cmd.Parameters.AddWithValue("@CreatoDaID", ticket.CreatoDaID);
@@ -215,7 +216,8 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
     {
         const string query = @"
             UPDATE Ticket 
-            SET Descrizione = @Descrizione, 
+            SET Titolo = @Titolo,
+                Descrizione = @Descrizione, 
                 Stato = @Stato, 
                 CreatoDaID = @CreatoDaID, 
                 AssegnatoAID = @AssegnatoAID 
@@ -224,6 +226,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
         using var conn = CreateConnection();
         using var cmd = new SqlCommand(query, conn);
 
+        cmd.Parameters.AddWithValue("@Titolo", ticket.Titolo);
         cmd.Parameters.AddWithValue("@ID", ticket.ID);
         cmd.Parameters.AddWithValue("@Descrizione", ticket.Descrizione);
         cmd.Parameters.AddWithValue("@Stato", ticket.Stato);
@@ -273,6 +276,7 @@ public class DAOTicket(string connectionString) : DAOBase<Ticket>(connectionStri
         return new Ticket
         {
             ID = reader.GetInt32(reader.GetOrdinal("ID")),
+            Titolo = reader.GetString(reader.GetOrdinal("Titolo")),
             Descrizione = reader.GetString(reader.GetOrdinal("Descrizione")),
             Stato = reader.GetString(reader.GetOrdinal("Stato")),
             CreatoDaID = reader.GetInt32(reader.GetOrdinal("CreatoDaID")),
