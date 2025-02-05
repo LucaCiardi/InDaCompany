@@ -1,0 +1,81 @@
+﻿@model Utente
+@{
+    ViewData["Title"] = "Profilo";
+}
+
+<div class="profile-container bg-indigo-100 min-h-screen p-8">
+    <div class="bg-indigo-700 rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center">
+            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center">
+                <span class="text-4xl text-white">@Model.Nome[0]@Model.Cognome[0]</span>
+            </div>
+            <div class="ml-6 text-white">
+                <h1 class="text-3xl font-bold">@Model.Nome @Model.Cognome</h1>
+                <p class="text-indigo-200">@Model.Email</p>
+                <p class="text-indigo-200">@Model.Ruolo</p>
+                @if (!string.IsNullOrEmpty(Model.Team))
+                {
+                    <p class="text-indigo-200">Team: @Model.Team</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <a href="@Url.Action("Create", "Ticket")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
+            <i class="fas fa-ticket-alt text-2xl mb-2"></i>
+            <h3 class="text-lg font-semibold">Apri Ticket</h3>
+        </a>
+        <a href="@Url.Action("Create", "Post")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
+            <i class="fas fa-edit text-2xl mb-2"></i>
+            <h3 class="text-lg font-semibold">Nuovo Post</h3>
+        </a>
+        <a href="@Url.Action("Index", "Forum")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
+            <i class="fas fa-comments text-2xl mb-2"></i>
+            <h3 class="text-lg font-semibold">Forum</h3>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Ticket</h2>
+            <div class="space-y-4">
+                @foreach (var ticket in (ViewBag.RecentTickets as List<Ticket>) ?? new List<Ticket>())
+                {
+                    <div class="border-l-4 border-indigo-500 pl-4 py-2">
+                        <h3 class="font-semibold">@ticket.Descrizione</h3>
+                        <div class="flex justify-between items-center text-sm text-gray-600">
+                            <span>Stato: @ticket.Stato</span>
+                            <span>@ticket.DataApertura.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </div>
+                }
+                @if (!(ViewBag.RecentTickets as List<Ticket>)?.Any() ?? true)
+                {
+                    <p class="text-gray-500 italic">Nessun ticket creato</p>
+                }
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Post</h2>
+            <div class="space-y-4">
+                @foreach (var post in (ViewBag.RecentPosts as List<Post>) ?? new List<Post>())
+                {
+                    <div class="border-l-4 border-indigo-500 pl-4 py-2">
+                        <p class="text-sm text-gray-600">@post.DataCreazione.ToString("dd/MM/yyyy")</p>
+                        <p class="mt-1">@post.Testo</p>
+                    </div>
+                }
+                @if (!(ViewBag.RecentPosts as List<Post>)?.Any() ?? true)
+                {
+                    <p class="text-gray-500 italic">Nessun post creato</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-code.js"></script>
+}

@@ -20,3 +20,38 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.navbar{
+  padding: 10px 20px;
+}
+
+.navbar-brand{
+  font-size: 1.5rem;
+}
+
+.navbar .form-control{
+  width: 250px;
+  border-radius: 20px;
+  border: none;
+  padding: 5px 15px;
+}
+
+.navbar .form-control:focus{
+  outline: none;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.navbar-nav .nav-link i{
+  transition: transform 0.2s ease-in-out;
+}
+
+navbar-nav .nav-link i:hover{
+  transform: scale(1.2);
+}
+
+footer {
+  position: absolute;
+  bottom:0;
+  width: 100%;
+  font-size: 0.9rem;
+}
