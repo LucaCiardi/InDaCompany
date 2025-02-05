@@ -59,7 +59,7 @@ CREATE TABLE Ticket (
 );
 
 CREATE TABLE Likes (
-    id INT IDENTITY PRIMARY key,
+    ID INT IDENTITY PRIMARY key,
     UtenteID INT NOT NULL,
     PostID INT NOT NULL,
     MiPiace BIT NOT NULL,
