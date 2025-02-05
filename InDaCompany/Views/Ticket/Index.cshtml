@@ -11,9 +11,9 @@
 </div>
 
 <div class="row-md">
-    <form asp-action="Index" method="get">
-        <input type="text" name="searchBar" class="form-control" placeholder="Cerca...">
-        <button class="btn btn-dark"><i class="bi bi-search"></i></button>
+    <form asp-action="Search" method="get">
+        <input type="text" name="searchBar" class="form-control" placeholder="Cerca..." aria-label="Cerca">
+        <button class="btn btn-dark" type="submit"><i class="bi bi-search"></i></button>
     </form>
 </div>
 
@@ -25,6 +25,7 @@
             <th>Descrizione</th>
             <th>Stato</th>
             <th>Data Apertura</th>
+            <th>Azioni</th>
         </tr>
     </thead>
     <tbody>
@@ -34,7 +35,15 @@
                 <td>@item.CreatoDaID</td>
                 <td>@item.Descrizione</td>
                 <td>@item.Stato</td>
-                <td>@item.DataApertura</td>
+                <td>@item.DataApertura.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i> Modifica
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i> Elimina
+                    </a>
+                </td>
             </tr>
         }
     </tbody>
