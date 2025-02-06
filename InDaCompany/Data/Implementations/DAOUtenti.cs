@@ -150,5 +150,25 @@ namespace InDaCompany.Data.Implementations
                 DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
             };
         }
+        //todo: update with a real password hashing - AS IS password is just plain text
+        //todo: update with async method
+        public Utente Authenticate(string username, string password) {
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash FROM Utente WHERE Email = @Username AND PasswordHash = @Password", conn);
+            cmd.Parameters.AddWithValue("@Username", username);
+            cmd.Parameters.AddWithValue("@Password", password);
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read()) {
+                return new Utente {
+                    ID = reader.GetInt32(reader.GetOrdinal("Id")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
+                    PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash"))
+                };
+            }
+            return null;
+
+        }
     }
 }

@@ -1,0 +1,66 @@
+@model InDaCompany.Models.LoginModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container mt-4">
+
+        @if (!string.IsNullOrEmpty(ViewData["ErrorMessage"] as string))
+        {
+            <div class="alert alert-danger">
+                @ViewData["ErrorMessage"]
+            </div>
+        }
+
+            <form asp-action="Login">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Username" class="control-label">Username</label>
+                <input asp-for="Username" class="form-control" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Password" class="control-label">Password</label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary text-white">Login</button>
+            </div>
+        </form>
+</div>
+
+<style>
+    .btn-primary {
+        background-color: indigo;
+        border-color: black;
+    }
+
+    .btn-primary:hover {
+        background-color: rgb(141, 65, 195);
+        border-color: black;
+    }
+
+    .form-control:focus {
+        box-shadow:inset 0cap 0cap 0cap 0.1rem rgb(141, 65, 195), 0 0 0 0.25rem indigo;
+    }
+
+    .form-check-input:focus {
+        box-shadow:inset 0cap 0cap 0cap 0.1rem rgb(141, 65, 195), 0 0 0 0.20rem indigo;
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
