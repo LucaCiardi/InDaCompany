@@ -46,6 +46,7 @@ CREATE TABLE MessaggiThread (
 
 CREATE TABLE Ticket (
     ID INT IDENTITY PRIMARY KEY,
+    Titolo NVARCHAR(200) NOT NULL,
     Descrizione NVARCHAR(MAX) NOT NULL,
     Stato VARCHAR(20) CHECK (Stato IN ('Aperto', 'In lavorazione', 'Chiuso')) NOT NULL DEFAULT 'Aperto',
     CreatoDaID INT NOT NULL,
