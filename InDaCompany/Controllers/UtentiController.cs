@@ -1,6 +1,9 @@
-﻿using InDaCompany.Data.Implementations;
+﻿using System.Security.Claims;
+using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -182,6 +185,52 @@ namespace InDaCompany.Controllers
             {
                 return true;
             }
+        }
+
+        [AllowAnonymous]
+        public IActionResult Login() {
+            if (User.Identity.IsAuthenticated) {
+                return RedirectToAction("Index", "Home");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginModel model) {
+
+            if (ModelState.IsValid) {
+                var user = _daoUtenti.Authenticate(model.Username, model.Password);
+
+                if (user != null) {
+                    var claims = new List<Claim> {
+                        new Claim(ClaimTypes.Name, user.Email),
+                        new Claim(ClaimTypes.Role, user.Ruolo),
+                        new Claim(ClaimTypes.NameIdentifier, user.ID.ToString())
+                    };
+
+                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var principal = new ClaimsPrincipal(identity);
+
+                    var authProperties = new AuthenticationProperties {
+                        IsPersistent = model.RememberMe,
+                        ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : DateTimeOffset.UtcNow.AddHours(2)
+                    };
+
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+                    return RedirectToAction("Index", "Home");
+                }
+
+                ModelState.AddModelError("", "Invalid username or password");
+            }
+            return View(model);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Logout() {
+
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
     }
 }
