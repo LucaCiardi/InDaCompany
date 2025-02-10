@@ -1,5 +1,6 @@
 using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,12 @@ builder.Services.AddScoped<IDAOMessaggiThread>(provider => new DAOMessaggiThread
 builder.Services.AddScoped<IDAOTicket>(provider => new DAOTicket(connectionString));
 builder.Services.AddScoped<IDAOLikes>(provider => new DAOLikes(connectionString));
 
-builder.Services.AddAuthentication().AddCookie();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options => {
+        options.LoginPath = "/Utenti/Login";
+        options.LogoutPath = "/Utenti/Logout";
+        options.AccessDeniedPath = "/Utenti/Login";
+    });
 
 var app = builder.Build();
 
