@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using InDaCompany.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers
 {
+    [Authorize]
     public class HomeController(
         IConfiguration configuration,
         ILogger<HomeController> logger) : BaseController(configuration, logger)
@@ -20,6 +22,12 @@ namespace InDaCompany.Controllers
                 logger.LogError(ex, "Error accessing home page");
                 return HandleException(ex);
             }
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
         public IActionResult Privacy()

@@ -196,6 +196,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginModel model) {
 
             if (ModelState.IsValid) {
@@ -221,13 +222,16 @@ namespace InDaCompany.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                ModelState.AddModelError("", "Invalid username or password");
+                ModelState.AddModelError("", "Username o password incorretti");
             }
             return View(model);
         }
 
-        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Logout() {
+            logger.LogInformation("Logout eseguito per l'utente {User}", User.Identity?.Name);
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");

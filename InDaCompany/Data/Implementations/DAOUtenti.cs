@@ -154,7 +154,7 @@ namespace InDaCompany.Data.Implementations
         //todo: update with async method
         public Utente Authenticate(string username, string password) {
             using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash FROM Utente WHERE Email = @Username AND PasswordHash = @Password", conn);
+            using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash, Ruolo FROM Utenti WHERE Email = @Username AND PasswordHash = @Password", conn);
             cmd.Parameters.AddWithValue("@Username", username);
             cmd.Parameters.AddWithValue("@Password", password);
             conn.Open();
@@ -162,9 +162,10 @@ namespace InDaCompany.Data.Implementations
 
             if (reader.Read()) {
                 return new Utente {
-                    ID = reader.GetInt32(reader.GetOrdinal("Id")),
-                    Email = reader.GetString(reader.GetOrdinal("Email")),
-                    PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash"))
+                    ID = reader.GetInt32(0),
+                    Email = reader.GetString(1),
+                    PasswordHash = reader.GetString(2),
+                    Ruolo = reader.GetString(3)
                 };
             }
             return null;
