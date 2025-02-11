@@ -1,10 +1,152 @@
-﻿@{
+﻿@model InDaCompany.Models.Utente;
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- CSS di Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- JavaScript di Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+<div class="container">
+    <div class="text-center d-flex justify-content-center align-items-center mb-4">
+        <i class="ti ti-rectangle-vertical-filled" style="color: indigo; margin-right: 10px;"></i>
+        <h1 class="display-4" style="font-family: 'Playfair Display', serif; margin: 0;">Welcome</h1>
+        <i class="ti ti-rectangle-vertical-filled" style="color: indigo; margin-left: 10px;"></i>
+    </div>
+
+    <div class="row">
+        <!-- Posts Column (60%) -->
+        <div class="col-8">
+            <!-- Post 1 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Post 1</h5>
+                    <p class="card-text">Descrizione post 1, bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</p>
+                    <button class="like-button"><i class="ti ti-heart-filled"></i></button>
+                </div>
+                <form class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label">Commenta</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="comment-button">Invia</button>
+                </form>
+                @if (Model.Ruolo == "Manager")
+                {
+                    <a asp-action="Create" asp-controller="Post" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>Crea
+                    </a>
+                }
+            </div>
+
+            <!-- Post 2 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Post 2</h5>
+                    <p class="card-text">Descrizione post 2, bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</p>
+                    <button class="like-button"><i class="ti ti-heart-filled"></i></button>
+                </div>
+                <form class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label">Commenta</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="comment-button">Invia</button>
+                </form>
+                @if (Model.Ruolo == "Manager")
+                {
+                    <a asp-action="Create" asp-controller="Post" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>Crea
+                    </a>
+                }
+            </div>
+
+            <!-- Post 3 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Post 3</h5>
+                    <p class="card-text">Descrizione post 3, bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</p>
+                    <button class="like-button"><i class="ti ti-heart-filled"></i></button>
+                </div>
+                <form class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label">Commenta</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="comment-button">Invia</button>
+                </form>
+                @if (Model.Ruolo == "Manager")
+                {
+                    <a asp-action="Create" asp-controller="Post" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>Crea
+                    </a>
+                }
+            </div>
+
+            <!-- Post 4 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Post 4</h5>
+                    <p class="card-text">Descrizione post 4, bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</p>
+                    <button class="like-button"><i class="ti ti-heart-filled"></i></button>
+                </div>
+                <form class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label">Commenta</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="comment-button">Invia</button>
+                </form>
+                @if (Model.Ruolo == "Manager")
+                {
+                    <a asp-action="Create" asp-controller="Post" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>Crea
+                    </a>
+                }
+            </div>
+
+            <!-- Post 5 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Post 5</h5>
+                    <p class="card-text">Descrizione post 5, bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla</p>
+                    <button class="like-button"><i class="ti ti-heart-filled"></i></button>
+                </div>
+                <form class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label">Commenta</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <button type="submit" class="comment-button">Invia</button>
+                </form>
+                @if (Model.Ruolo == "Manager")
+                {
+                    <a asp-action="Create" asp-controller="Post" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>Crea
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Threads Column (30%) -->
+        <div class="col-4">
+            <ul class="list-group">
+                <li class="titolo-forum" aria-current="true">FORUM TEAM CAZZI</li>
+                <li class="list-group-item">Thread 1</li>
+                <li class="list-group-item">Thread 2</li>
+                <li class="list-group-item">Thread 3</li>
+                <li class="list-group-item">Thread 4</li>
+                <li class="list-group-item">Thread 5</li>
+                <li class="list-group-item">Thread 6</li>
+                <li class="list-group-item">Thread 7</li>
+                <li class="list-group-item">Thread 8</li>
+                <li class="list-group-item">Thread 9</li>
+                <li class="list-group-item">Thread 10</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <div class="text-center mb-4">

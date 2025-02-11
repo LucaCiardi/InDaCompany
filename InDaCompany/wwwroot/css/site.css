@@ -55,3 +55,28 @@ footer {
   width: 100%;
   font-size: 0.9rem;
 }
+
+.like-button {
+  border: none;
+  background: none;
+  color: indigo;
+}
+
+.comment-button {
+  background-color: indigo;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 5px;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.titolo-forum {
+  background-color: indigo;
+  color: white;
+  padding: 10px;
+  list-style: none;
+}

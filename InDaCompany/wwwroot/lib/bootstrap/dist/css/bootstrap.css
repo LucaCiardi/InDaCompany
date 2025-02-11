@@ -5031,7 +5031,9 @@ textarea.form-control-lg {
   text-decoration: none;
   background-color: #fff;
   border: 1px solid rgba(0, 0, 0, 0.125);
+  cursor: pointer;
 }
+
 .list-group-item:first-child {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
