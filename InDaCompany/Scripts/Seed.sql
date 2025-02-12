@@ -33,12 +33,12 @@ INSERT INTO MessaggiThread (ThreadID, AutoreID, Testo, DataCreazione) VALUES
 (3, 4, 'Obiettivi Q1 2025', CONVERT(DATETIME, '17/01/2024', 103)),
 (4, 5, 'Nuove linee guida smart working', CONVERT(DATETIME, '18/01/2024', 103));
 
-INSERT INTO Ticket (Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura) VALUES
-('Problema accesso email', 'Aperto', 3, 1, CONVERT(DATETIME, '20/01/2024', 103)),
-('Richiesta nuovo laptop', 'In lavorazione', 4, 2, CONVERT(DATETIME, '21/01/2024', 103)),
-('Configurazione VPN', 'Chiuso', 5, 1, CONVERT(DATETIME, '22/01/2024', 103)),
-('Aggiornamento software', 'Aperto', 2, 3, CONVERT(DATETIME, '23/01/2024', 103)),
-('Problema stampante', 'In lavorazione', 3, 5, CONVERT(DATETIME, '24/01/2024', 103));
+INSERT INTO Ticket (Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataApertura) VALUES
+('Supporto Email', 'Problema accesso email', 'Aperto', 3, 1, CONVERT(DATETIME, '20/01/2024', 103)),
+('Hardware Request', 'Richiesta nuovo laptop', 'In lavorazione', 4, 2, CONVERT(DATETIME, '21/01/2024', 103)),
+('Network Issue', 'Configurazione VPN', 'Chiuso', 5, 1, CONVERT(DATETIME, '22/01/2024', 103)),
+('Software Update', 'Aggiornamento software', 'Aperto', 2, 3, CONVERT(DATETIME, '23/01/2024', 103)),
+('Printer Support', 'Problema stampante', 'In lavorazione', 3, 5, CONVERT(DATETIME, '24/01/2024', 103));
 
 INSERT INTO Likes (UtenteID, PostID, MiPiace) VALUES
 (2, 1, 1),
