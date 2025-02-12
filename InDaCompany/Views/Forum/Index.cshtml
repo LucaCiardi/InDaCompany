@@ -1,0 +1,39 @@
+﻿@model ForumViewModel
+@{
+    ViewData["Title"] = "Forum";
+}
+<div class="container mt-4">
+    <h2 class="text-white">@Model.Forum</h2>
+    <button class="btn btn-primary my-3" id="btnCreateThread"></button>
+    <div id="createThreadForm" class="d-none">
+        <input type="text" id="threadTitle" class="form-control mb-2" placeholder="Titolo">
+        <textarea id="threadContent" class="form-control mb-2" placeholder="Contenuto"></textarea>
+        <button class="btn btn-success" id="submitThread">Pubblica</button>
+    </div>
+    <ul class="list-group">
+        @foreach (var thread in Model.Threads)
+        {
+            <li class="list-group-item text-white bg-dark thread-item">
+                <h3>@thread.Titolo</h3>
+                <p>Data: @thread.DataCreazione</p>
+
+                <button class="btn btn-light btn-sm btnComment" data-thread-id="@thread.ID">Commenta</button>
+                <div class="comments d-none" id="comments-@thread.ID">
+                    <textarea class="form-control my-2" placeholder="Scrivi un commento..."></textarea>
+                    <button class="btn btn-success btn-sm">Invia</button>
+                </div>
+            </li>
+        }
+    </ul>
+</div>
+<script>
+    document.getElementById("btnCreateThread").addEventListener("click", function () {
+        document.getElementById("createThreadForm").classList.toggle("d-none");
+    });
+    document.querySelectorAll(".btnComment").forEach(btn => {
+        btn.addEventListener("click", function () {
+            let threadId = this.getAttribute("data-thread-id");
+            document.getElementById(`comments-${threadId}`).classList.toggle("d-none");
+        });
+    });
+</script>
