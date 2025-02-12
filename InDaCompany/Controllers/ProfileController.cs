@@ -1,4 +1,5 @@
-﻿using InDaCompany.Data.Implementations;
+﻿using System.Security.Claims;
+using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,16 +17,6 @@ namespace InDaCompany.Controllers
         private readonly IDAOUtenti _daoUtenti = DAOUtenti;
         private readonly IDAOTicket _daoTicket = DAOTicket;
         private readonly IDAOPost _daoPost = DAOPost;
-
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst("UserId");
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
-                throw new InvalidOperationException("User not properly authenticated");
-            }
-            return userId;
-        }
 
         public async Task<IActionResult> Index()
         {
@@ -48,6 +39,17 @@ namespace InDaCompany.Controllers
                 return HandleException(ex);
             }
         }
+
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new InvalidOperationException("User not properly authenticated");
+            }
+            return userId;
+        }
+
         public IActionResult CreateTicket()
         {
             return RedirectToAction("Create", "Ticket");
