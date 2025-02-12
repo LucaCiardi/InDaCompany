@@ -1,25 +1,50 @@
 using System.Diagnostics;
 using InDaCompany.Models;
+using InDaCompany.Data.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class HomeController(
-        IConfiguration configuration,
-        ILogger<HomeController> logger) : BaseController(configuration, logger)
+    public class HomeController : BaseController
     {
-        public IActionResult Index()
+        private readonly IDAOPost _daoPost;
+        private readonly IDAOThreadForum _daoThreadForum;
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(
+            IConfiguration configuration,
+            ILogger<HomeController> logger,
+            IDAOPost daoPost,
+            IDAOThreadForum daoThreadForum)
+            : base(configuration, logger)
+        {
+            _daoPost = daoPost;
+            _daoThreadForum = daoThreadForum;
+            _logger = logger;
+        }
+
+        public async Task<IActionResult> Index()
         {
             try
             {
-                logger.LogInformation("Accessing home page");
-                return View();
+                _logger.LogInformation("Accessing home page");
+
+                var posts = await _daoPost.GetAllAsync();
+                var threads = await _daoThreadForum.GetAllAsync();
+
+                var model = new HomeViewModel
+                {
+                    Posts = posts ?? new List<Post>(),
+                    Threads = threads ?? new List<ThreadForum>()
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error accessing home page");
+                _logger.LogError(ex, "Error accessing home page");
                 return HandleException(ex);
             }
         }
@@ -34,12 +59,12 @@ namespace InDaCompany.Controllers
         {
             try
             {
-                logger.LogInformation("Accessing privacy page");
+                _logger.LogInformation("Accessing privacy page");
                 return View();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error accessing privacy page");
+                _logger.LogError(ex, "Error accessing privacy page");
                 return HandleException(ex);
             }
         }
@@ -52,7 +77,7 @@ namespace InDaCompany.Controllers
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             };
 
-            logger.LogError("Error page accessed. RequestId: {RequestId}", errorViewModel.RequestId);
+            _logger.LogError("Error page accessed. RequestId: {RequestId}", errorViewModel.RequestId);
             return View(errorViewModel);
         }
     }

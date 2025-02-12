@@ -219,8 +219,8 @@ namespace InDaCompany.Controllers
                     };
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-                    
-                    //ViewBag.User = user;
+
+                    ViewBag.User = user;
                     return RedirectToAction("Index", "Home");
                 }
 
