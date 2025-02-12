@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Text.Json.Serialization;
 using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
@@ -218,7 +219,8 @@ namespace InDaCompany.Controllers
                     };
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-                    ViewBag.User = user;
+                    
+                    //ViewBag.User = user;
                     return RedirectToAction("Index", "Home");
                 }
 
