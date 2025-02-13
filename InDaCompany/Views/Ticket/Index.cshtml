@@ -5,15 +5,15 @@
 }
 
 <div class="text-center mb-5">
-    <h2 class="display-4 text-white">
+    <h2 class="display-4 text-indigo">
         <i class="bi bi-ticket-detailed"></i> Ticket System
         </h2>
 </div>
 
 <div class="row-md">
-    <form asp-action="Search" method="get">
-        <input type="text" name="searchBar" class="form-control" placeholder="Cerca..." aria-label="Cerca">
-        <button class="btn btn-dark" type="submit"><i class="bi bi-search"></i></button>
+    <form asp-action="Search" method="get" class="d-flex me-3">
+        <input type="search" name="searchBar" class="form-control" placeholder="Cerca..." aria-label="Cerca">
+        <button class="btn btn-dark text-white" type="submit"><i class="bi bi-search"></i></button>
     </form>
 </div>
 
@@ -48,3 +48,9 @@
         }
     </tbody>
 </table>
+
+<style>
+    .text-indigo {
+        color:indigo;
+    }
+</style>

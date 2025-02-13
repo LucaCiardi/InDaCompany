@@ -21,16 +21,16 @@
     <!-- Navbar in stile Reddit -->
     <ul class="nav nav-pills mt-3 mb-4">
         <li class="nav-item">
-            <a class="nav-link active" href="@Url.Action("Index", "Post")">Posts</a> <!-- da eliminare -->
+            <a class="nav-link active" href="@Url.Action("Index", "Post")" id="nav-custom">Posts</a> <!-- da eliminare -->
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("Index", "MessaggiThread")">Comments</a>
+            <a class="nav-link" href="@Url.Action("Index", "MessaggiThread")" id="nav-custom">Comments</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/upvoted">Liked</a>
+            <a class="nav-link" href="/upvoted" id="nav-custom">Liked</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/ticket">Ticket</a>
+            <a class="nav-link" href="/ticket" id="nav-custom">Ticket</a>
         </li>
     </ul>
 
@@ -209,8 +209,9 @@
         }
 </style>
 
+
 <script>
-    const navLinks = document.querySelectorAll(".nav-link");
+    const navLinks = document.querySelectorAll("#nav-custom");
     const content = document.querySelectorAll(".content-section");
 
     // Funzione per gestire il cambio di sezione
