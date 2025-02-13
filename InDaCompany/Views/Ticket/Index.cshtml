@@ -11,13 +11,15 @@
 </div>
 
 <div class="row-md">
-    <form asp-action="Search" method="get" class="d-flex me-3">
-        <input type="search" name="searchBar" class="form-control" placeholder="Cerca..." aria-label="Cerca">
-        <button class="btn btn-dark text-white" type="submit"><i class="bi bi-search"></i></button>
+    <form asp-action="Search" method="get" class="d-flex me-3 mb-3">
+        <input type="search" name="searchBar" class="form-control me-2 search-box" placeholder="Cerca..." aria-label="Cerca">
+        <button class="btn text-white" id="btn-indigo" type="submit">
+            <i class="bi bi-search"></i>
+        </button>
     </form>
 </div>
 
-<table class="table table-bordered">
+<table class="table table-bordered" id="table-container">
     <thead>
         <tr>
             <th>ID</th>
@@ -37,7 +39,7 @@
                 <td>@item.Stato</td>
                 <td>@item.DataApertura.ToString("dd/MM/yyyy")</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-warning btn-sm">
+                    <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
                         <i class="bi bi-pencil"></i> Modifica
                     </a>
                     <a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-danger btn-sm">
@@ -52,5 +54,21 @@
 <style>
     .text-indigo {
         color:indigo;
+    }
+
+    #btn-indigo {
+        color: #fff;
+        background-color: indigo;
+        border-color: indigo;
+    }
+
+    #btn-indigo:hover {
+        color: #fff;
+        background-color: rgb(141, 65, 195);
+        border-color: indigo;
+    }
+
+    #table-container {
+        border: 1px solid indigo;
     }
 </style>
