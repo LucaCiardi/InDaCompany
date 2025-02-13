@@ -158,27 +158,34 @@ namespace InDaCompany.Data.Implementations
         }
         //todo: update with a real password hashing - AS IS password is just plain text
         //todo: update with async method
-        public Utente Authenticate(string username, string password)
+        public async Task<Utente?> AuthenticateAsync(string username, string password)
         {
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash, Ruolo FROM Utenti WHERE Email = @Username AND PasswordHash = @Password", conn);
-            cmd.Parameters.AddWithValue("@Username", username);
-            cmd.Parameters.AddWithValue("@Password", password);
-            conn.Open();
-            using var reader = cmd.ExecuteReader();
+            const string query = @"
+        SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+        FROM Utenti 
+        WHERE Email = @Username";
 
-            if (reader.Read())
+            var parameters = new[]
             {
-                return new Utente
-                {
-                    ID = reader.GetInt32(0),
-                    Email = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    Ruolo = reader.GetString(3)
-                };
-            }
-            return null;
+        new SqlParameter("@Username", username)
+    };
 
+            var user = await ExecuteQuerySingleAsync(query, parameters);
+
+            if (user != null && VerifyPassword(password, user.PasswordHash))
+            {
+                return user;
+            }
+
+            return null;
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            // Implement proper password verification here
+            // Example using BCrypt:
+            // return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+            return password == hashedPassword; // Temporary implementation
         }
         public async Task UpdateProfilePictureAsync(int userId, byte[] imageData)
         {
@@ -200,6 +207,30 @@ namespace InDaCompany.Data.Implementations
                 throw new DAOException($"Error updating profile picture for user {userId}", ex);
             }
         }
+        public async Task SetDefaultProfilePictureAsync(int userId)
+        {
+            var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                "wwwroot", "images", "profile.jpg");
+            byte[] defaultImageBytes = await File.ReadAllBytesAsync(defaultAvatarPath);
+
+            const string query = "UPDATE Utenti SET FotoProfilo = @FotoProfilo WHERE ID = @ID";
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@ID", userId);
+            cmd.Parameters.AddWithValue("@FotoProfilo", defaultImageBytes);
+
+            try
+            {
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Error setting default profile picture for user {userId}", ex);
+            }
+        }
+
     }
 }
 

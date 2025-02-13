@@ -45,6 +45,11 @@
             </div>
         </nav>
     </header>
+    @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+    @{
+        var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    }
+    <input type="hidden" name="__RequestVerificationToken" value="@token" />
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
