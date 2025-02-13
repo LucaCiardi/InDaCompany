@@ -9,6 +9,10 @@ namespace InDaCompany.Models
         [Required]
         [StringLength(255)]
         public string Titolo { get; set; } = null!;
+        
+        [Required]
+        [StringLength(255)]
+        public string Testo { get; set; } = null!;
 
         [Required]
         public int ForumID { get; set; }
