@@ -1,78 +1,82 @@
-﻿@model Utente
+﻿@model ProfileViewModel
+
 @{
     ViewData["Title"] = "Profilo";
 }
-<!--
-<div class="profile-container bg-indigo-100 p-8 mt-6">
-    <div class="bg-indigo-700 rounded-lg shadow-lg p-6">
-        <div class="flex items-center">
-            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center">
-                <span class="text-4xl text-black">@Model.Nome[0]@Model.Cognome[0]</span>
-            </div>
-            <div class="ml-6 text-black">
-                <h1 class="text-3xl font-bold">@Model.Nome @Model.Cognome</h1>
-                <p class="text-indigo-200">@Model.Email</p>
-                <p class="text-indigo-200">@Model.Ruolo</p>
-                @if (!string.IsNullOrEmpty(Model.Team))
-                {
-                    <p class="text-indigo-200">Team: @Model.Team</p>
-                }
-            </div>
-        </div>
-    </div>
--->
 
 <div class="container mt-4">
      <!-- Header del profilo -->
     <div class="profile-header d-flex align-items-center">
         <img src="" alt="Foto Profilo" class="profile-photo me-3" />
         <div>
-            <h3 class="mb-0">Utente Nome Cognome</h3>
-            <p class="text-muted">Utente.dataCreazione • Utente.Team</p>
+            <h3 class="mb-0">@Model.Utente.Nome @Model.Utente.Cognome</h3>
+            @if (!string.IsNullOrEmpty(Model.Utente.Team)) {
+            <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy") • @Model.Utente.Team</p>
+            } else {
+                <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy")</p>
+            }
         </div>
     </div>
 
     <!-- Navbar in stile Reddit -->
     <ul class="nav nav-pills mt-3 mb-4">
         <li class="nav-item">
-            <a class="nav-link active" href="#">Posts</a>
+            <a class="nav-link active" href="@Url.Action("Index", "Post")">Posts</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">Comments</a>
+            <a class="nav-link" href="@Url.Action("Index", "MessaggiThread")">Comments</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">Liked</a>
+            <a class="nav-link" href="/upvoted">Liked</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">Ticket</a>
+            <a class="nav-link" href="/ticket">Ticket</a>
         </li>
     </ul>
 
+    <!-- Contenuto delle Sezioni -->
     <div class="row mt-4">
         <!-- Sezione Post -->
         <div class="col-md-8">
-            <!-- Post Singolo -->
-            <div class="post-card mb-3 p-3">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Forum.nomeForum • Post.dataCreazione</span>
+            <div id="content-posts" class="content-section">
+                <!-- Post Singolo -->
+                @foreach (var post in Model.Posts) {
+                <div class="post-card mb-3 p-3">
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Model.Forum.Nome • @post.DataCreazione.ToString("d")</span> <!--Rimuovere il nomeForum, nei posts non esiste -->
+                    </div>
+                    <h5 class="mt-2">post.Titolo</h5>
+                    <p class="text-muted">@post.Testo</p>
+                    <img src="" class="img-fluid rounded" alt="Immagine Post">
+                    <div class="d-flex justify-content-start mt-3">
+                        <button class="btn btn-outline-primary mr-*">
+                            <span class="material-icons">thumb_up</span> Mi piace
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <span class="material-icons">comment</span> Commenta
+                        </button>
+                    </div>
                 </div>
-                <h5 class="mt-2">Post.Titolo</h5>
-                <p class="text-muted">Post.Descrizione</p>
-                <img src="" class="img-fluid rounded" alt="Immagine Post">
-                <div class="d-flex justify-content-start mt-3">
-                    <button class="btn btn-outline-primary mr-*">
-                        <span class="material-icons">thumb_up</span> Mi piace
-                    </button>
-                    <button class="btn btn-outline-secondary">
-                        <span class="material-icons">comment</span> Commenta
-                    </button>
-                </div>
+                }
+            </div>
+
+            <div id="content-comments" class="content-section d-none">
+                <p>Qui verranno mostrati i commenti dell'utente.</p>
+            </div>
+
+            <div id="content-upvoted" class="content-section d-none">
+                <p>Qui verranno mostrati i post upvotati dall'utente.</p>
+            </div>
+
+            <div id="content-saved" class="content-section d-none">
+                <p>Qui verranno mostrati i post salvati dall'utente.</p>
             </div>
         </div>
 
 
-    <!-- Sidebar Destra -->
-    <div class="col-md-4">
+        <!-- Sidebar Destra -->
+        <div class="col-md-4">
         
             <button class="btn btn-outline-secondary btn-lg pr-4">
                 <span class="material-icons">confirmation_number</span> Apri ticket
@@ -86,9 +90,9 @@
         <div class="sidebar-card p-2 mt-3">
             <h5><span class="material-icons">groups</span> Comunità Iscritte</h5>
             <ul class="list-unstyled">
-                <li><a href="#">r/Team 1</a></li>
-                <li><a href="#">r/Team 2</a></li>
-                <li><a href="#">r/Team 3</a></li>
+                @foreach (var forum in Model.Forums) {
+                <li><a href="#">r/@forum.Nome</a></li>
+                }
                 <li><a href="#">r/meme</a></li>
             </ul>
         </div>
@@ -134,8 +138,6 @@
             </div>
         </div>
     </div>-->
-
-
 
 <style>
         /* Header del profilo */
@@ -199,3 +201,27 @@
             border-radius: 8px;
         }
 </style>
+
+<script>
+    const navLinks = document.querySelectorAll(".nav-link");
+    const content = document.querySelectorAll(".content-section");
+
+    // Funzione per gestire il cambio di sezione
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();  // Previene il ricaricamento della pagina
+            
+            // Rimuove la classe "active" da tutti i link
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            // Aggiunge la classe "active" al link cliccato
+            this.classList.add('active');
+
+            // Nasconde tutte le sezioni
+            contentSections.forEach(section => section.classList.add('d-none'));
+
+            // Mostra la sezione corrispondente
+            const targetId = this.getAttribute('href').substring(1);
+            document.getElementById(`content-${targetId}`).classList.remove('d-none');
+        });
+    });
+</script>

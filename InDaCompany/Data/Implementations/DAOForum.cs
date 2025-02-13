@@ -38,6 +38,34 @@ namespace InDaCompany.Data.Implementations
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
+        public async Task<List<Forum>> GetForumByUser(string teamUser) {
+
+            const string query = @"
+                SELECT ID, Nome, Descrizione, Team 
+                FROM Forum 
+                WHERE Team = @TeamUser";
+            var forums = new List<Forum>();
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@TeamUser", teamUser);
+
+            try
+            {
+                await conn.OpenAsync();
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    forums.Add(MapFromReader(reader));
+                }
+                return forums;
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Error retrieving tickets for creator {teamUser}", ex);
+            }
+        }
+
         public async Task<int> InsertAsync(Forum forum)
         {
             const string query = @"
