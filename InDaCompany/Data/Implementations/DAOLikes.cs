@@ -8,7 +8,7 @@ namespace InDaCompany.Data.Implementations
     {
         public async Task<List<Like>> GetAllAsync()
         {
-            const string query = "SELECT ID, UtenteID, PostID, MiPiace FROM Likes";
+            const string query = "SELECT ID, UtenteID, ThreadID, MiPiace FROM Likes";
             var likes = new List<Like>();
 
             using var conn = CreateConnection();
@@ -32,7 +32,7 @@ namespace InDaCompany.Data.Implementations
 
         public async Task<Like?> GetByIdAsync(int id)
         {
-            const string query = "SELECT ID, UtenteID, PostID, MiPiace FROM Likes WHERE ID = @ID";
+            const string query = "SELECT ID, UtenteID, ThreadID, MiPiace FROM Likes WHERE ID = @ID";
             var parameters = new[] { new SqlParameter("@ID", id) };
 
             return await ExecuteQuerySingleAsync(query, parameters);
@@ -41,15 +41,15 @@ namespace InDaCompany.Data.Implementations
         public async Task<int> InsertAsync(Like like)
         {
             const string query = @"
-                INSERT INTO Likes (UtenteID, PostID, MiPiace) 
-                VALUES (@UtenteID, @PostID, @MiPiace);
+                INSERT INTO Likes (UtenteID, ThreadID, MiPiace) 
+                VALUES (@UtenteID, @ThreadID, @MiPiace);
                 SELECT SCOPE_IDENTITY();";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
 
             cmd.Parameters.AddWithValue("@UtenteID", like.UtenteID);
-            cmd.Parameters.AddWithValue("@PostID", like.PostID);
+            cmd.Parameters.AddWithValue("@ThreadID", like.ThreadID);
             cmd.Parameters.AddWithValue("@MiPiace", like.MiPiace);
 
             try
@@ -69,7 +69,7 @@ namespace InDaCompany.Data.Implementations
             const string query = @"
                 UPDATE Likes 
                 SET UtenteID = @UtenteID,
-                    PostID = @PostID,
+                    ThreadID = @ThreadID,
                     MiPiace = @MiPiace
                 WHERE ID = @ID";
 
@@ -78,7 +78,7 @@ namespace InDaCompany.Data.Implementations
 
             cmd.Parameters.AddWithValue("@ID", like.ID);
             cmd.Parameters.AddWithValue("@UtenteID", like.UtenteID);
-            cmd.Parameters.AddWithValue("@PostID", like.PostID);
+            cmd.Parameters.AddWithValue("@ThreadID", like.ThreadID);
             cmd.Parameters.AddWithValue("@MiPiace", like.MiPiace);
 
             try
@@ -119,14 +119,14 @@ namespace InDaCompany.Data.Implementations
             return await ExistsAsync(query, parameters);
         }
 
-        public async Task<int> GetLikeCountAsync(int postID)
+        public async Task<int> GetLikeCountAsync(int threadID)
         {
-            const string query = "SELECT COUNT(*) FROM Likes WHERE PostID = @PostId";
+            const string query = "SELECT COUNT(*) FROM Likes WHERE ThreadID = @ThreadID";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
 
-            cmd.Parameters.AddWithValue("@PostId", postID);
+            cmd.Parameters.AddWithValue("@ThreadID", threadID);
 
             try
             {
@@ -136,19 +136,19 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error counting likes for post {postID}", ex);
+                throw new DAOException($"Error counting likes for thread {threadID}", ex);
             }
         }
 
-        public async Task<bool> HasUserLikedPostAsync(int utenteID, int postID)
+        public async Task<bool> HasUserLikedPostAsync(int utenteID, int threadID)
         {
-            const string query = "SELECT 1 FROM Likes WHERE UtenteID = @UtenteId AND PostID = @PostId";
+            const string query = "SELECT 1 FROM Likes WHERE UtenteID = @UtenteId AND ThreadID = @ThreadID";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
 
             cmd.Parameters.AddWithValue("@UtenteId", utenteID);
-            cmd.Parameters.AddWithValue("@PostId", postID);
+            cmd.Parameters.AddWithValue("@ThreadID", threadID);
 
             try
             {
@@ -158,21 +158,21 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error checking like status for user {utenteID} and post {postID}", ex);
+                throw new DAOException($"Error checking like status for user {utenteID} and thread {threadID}", ex);
             }
         }
 
-        public async Task<int> ToggleLikeAsync(int utenteID, int postID)
+        public async Task<int> ToggleLikeAsync(int utenteID, int threadID)
         {
             const string query = @"
-                IF EXISTS (SELECT 1 FROM Likes WHERE UtenteID = @UtenteId AND PostID = @PostId)
+                IF EXISTS (SELECT 1 FROM Likes WHERE UtenteID = @UtenteId AND ThreadID = @ThreadID)
                 BEGIN
-                    DELETE FROM Likes WHERE UtenteID = @UtenteId AND PostID = @PostId;
+                    DELETE FROM Likes WHERE UtenteID = @UtenteId AND ThreadID = @ThreadID;
                     SELECT 0;
                 END
                 ELSE
                 BEGIN
-                    INSERT INTO Likes (UtenteID, PostID, MiPiace) VALUES (@UtenteId, @PostId, 1);
+                    INSERT INTO Likes (UtenteID, ThreadID, MiPiace) VALUES (@UtenteId, @ThreadID, 1);
                     SELECT 1;
                 END";
 
@@ -180,7 +180,7 @@ namespace InDaCompany.Data.Implementations
             using var cmd = new SqlCommand(query, conn);
 
             cmd.Parameters.AddWithValue("@UtenteId", utenteID);
-            cmd.Parameters.AddWithValue("@PostId", postID);
+            cmd.Parameters.AddWithValue("@ThreadID", threadID);
 
             try
             {
@@ -190,19 +190,19 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error toggling like for user {utenteID} and post {postID}", ex);
+                throw new DAOException($"Error toggling like for user {utenteID} and thread {threadID}", ex);
             }
         }
 
-        public async Task DeleteByPostAndUserAsync(int utenteID, int postID)
+        public async Task DeleteByPostAndUserAsync(int utenteID, int threadID)
         {
-            const string query = "DELETE FROM Likes WHERE UtenteID = @UtenteId AND PostID = @PostId";
+            const string query = "DELETE FROM Likes WHERE UtenteID = @UtenteId AND ThreadID = @ThreadID";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
 
             cmd.Parameters.AddWithValue("@UtenteId", utenteID);
-            cmd.Parameters.AddWithValue("@PostId", postID);
+            cmd.Parameters.AddWithValue("@ThreadID", threadID);
 
             try
             {
@@ -211,7 +211,7 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error deleting like for user {utenteID} and post {postID}", ex);
+                throw new DAOException($"Error deleting like for user {utenteID} and thread {threadID}", ex);
             }
         }
 
@@ -221,7 +221,7 @@ namespace InDaCompany.Data.Implementations
             {
                 ID = reader.GetInt32(reader.GetOrdinal("ID")),
                 UtenteID = reader.GetInt32(reader.GetOrdinal("UtenteID")),
-                PostID = reader.GetInt32(reader.GetOrdinal("PostID")),
+                ThreadID = reader.GetInt32(reader.GetOrdinal("ThreadID")),
                 MiPiace = reader.GetBoolean(reader.GetOrdinal("MiPiace"))
             };
         }

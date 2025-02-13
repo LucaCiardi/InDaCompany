@@ -33,12 +33,11 @@ namespace InDaCompany.Controllers
                     return NotFound();
 
                 var ticketsByAuthor = await _daoTicket.GetByCreatoDaIDAsync(userId);
-                var postsByAuthor = await _daoPost.GetByAutoreIDAsync(userId);
-                var forumsOfAuthor = await _daoForum.GetForumByUser(user.Team == null ? "Sviluppo" : user.Team); //da sistemare il metodo
+                //var postsByAuthor = await _daoPost.GetByAutoreIDAsync(userId);
+                var forumsOfAuthor = await _daoForum.GetForumByUser(user.Team == null ? "Generale" : user.Team);
 
                 ProfileViewModel profileModel = new ProfileViewModel {
                     Utente = user,
-                    Posts = postsByAuthor,
                     Tickets = ticketsByAuthor,
                     Forums = forumsOfAuthor
                 };

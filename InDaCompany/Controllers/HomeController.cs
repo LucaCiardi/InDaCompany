@@ -31,12 +31,12 @@ namespace InDaCompany.Controllers
             {
                 _logger.LogInformation("Accessing home page");
 
-                var posts = await _daoPost.GetAllAsync();
+                //var posts = await _daoPost.GetAllAsync();
                 var threads = await _daoThreadForum.GetAllAsync();
 
                 var model = new HomeViewModel
                 {
-                    Posts = posts ?? new List<Post>(),
+                    
                     Threads = threads ?? new List<ThreadForum>()
                 };
 

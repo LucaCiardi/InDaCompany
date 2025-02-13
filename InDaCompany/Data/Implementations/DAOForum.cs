@@ -38,17 +38,17 @@ namespace InDaCompany.Data.Implementations
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
-        public async Task<List<Forum>> GetForumByUser(string teamUser) {
+        public async Task<List<Forum>> GetForumByUser(string mailUser) {
 
             const string query = @"
-                SELECT ID, Nome, Descrizione, Team 
-                FROM Forum 
-                WHERE Team = @TeamUser";
+                SELECT Forum.ID, Forum.Nome, Forum.Descrizione, Forum.Team
+                FROM Utenti LEFT JOIN Forum ON Utenti.Team = forum.Team
+                WHERE Utenti.Email = @MailUser";
             var forums = new List<Forum>();
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-            cmd.Parameters.AddWithValue("@TeamUser", teamUser);
+            cmd.Parameters.AddWithValue("@MailUser", mailUser);
 
             try
             {
@@ -62,7 +62,7 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error retrieving tickets for creator {teamUser}", ex);
+                throw new DAOException($"Error retrieving tickets for creator {mailUser}", ex);
             }
         }
 

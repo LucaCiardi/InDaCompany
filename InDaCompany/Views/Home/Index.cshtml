@@ -17,9 +17,9 @@
     <div class="row">
         <!-- Colonna dei Post -->
         <div class="col-8">
-            @if (Model.Posts != null && Model.Posts.Any())
+            @if (Model.Threads != null && Model.Threads.Any())
             {
-                @foreach (var post in Model.Posts)
+                @foreach (var post in Model.Threads)
                 {
                     <div class="card mb-4">
                         <div class="card-body">

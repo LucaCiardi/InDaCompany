@@ -10,7 +10,7 @@ namespace InDaCompany.Models
         public int UtenteID { get; set; }
 
         [Required]
-        public int PostID { get; set; }
+        public int ThreadID { get; set; }
 
         [Required]
         public bool MiPiace { get; set; }
