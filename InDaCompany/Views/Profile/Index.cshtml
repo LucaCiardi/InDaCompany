@@ -1,31 +1,63 @@
-﻿
-@model Utente
+﻿@model ProfileViewModel
+
 @{
     ViewData["Title"] = "Profilo";
 }
 
-<div class="profile-container bg-indigo-100 min-h-screen p-8">
-    <div class="bg-indigo-700 rounded-lg shadow-lg p-6 mb-8">
-        <div class="flex items-center">
-            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center overflow-hidden">
-                @if (Model.FotoProfilo != null)
-                {
-                    <img src="@Url.Action("GetProfilePicture", "Utenti", new { id = Model.ID })"
-                         alt="Profile Picture"
-                         class="w-full h-full object-cover" />
-                }
-                else
-                {
-                    <span class="text-4xl text-white">@Model.Nome[0]@Model.Cognome[0]</span>
-                }
-            </div>
-            <div class="ml-6 text-white">
-                <h1 class="text-3xl font-bold">@Model.Nome @Model.Cognome</h1>
-                <p class="text-indigo-200">@Model.Email</p>
-                <p class="text-indigo-200">@Model.Ruolo</p>
-                @if (!string.IsNullOrEmpty(Model.Team))
-                {
-                    <p class="text-indigo-200">Team: @Model.Team</p>
+<div class="container mt-4">
+     <!-- Header del profilo -->
+    <div class="profile-header d-flex align-items-center">
+        <img src="" alt="Foto Profilo" class="profile-photo me-3" />
+        <div>
+            <h3 class="mb-0">@Model.Utente.Nome @Model.Utente.Cognome</h3>
+            @if (!string.IsNullOrEmpty(Model.Utente.Team)) {
+            <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy") • @Model.Utente.Team</p>
+            } else {
+                <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy")</p>
+            }
+        </div>
+    </div>
+
+    <!-- Navbar in stile Reddit -->
+    <ul class="nav nav-pills mt-3 mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" href="@Url.Action("Index", "Post")">Posts</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("Index", "MessaggiThread")">Comments</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/upvoted">Liked</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/ticket">Ticket</a>
+        </li>
+    </ul>
+
+    <!-- Contenuto delle Sezioni -->
+    <div class="row mt-4">
+        <!-- Sezione Post -->
+        <div class="col-md-8">
+            <div id="content-posts" class="content-section">
+                <!-- Post Singolo -->
+                @foreach (var post in Model.Posts) {
+                <div class="post-card mb-3 p-3">
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Model.Forum.Nome • @post.DataCreazione.ToString("d")</span> <!--Rimuovere il nomeForum, nei posts non esiste -->
+                    </div>
+                    <h5 class="mt-2">post.Titolo</h5>
+                    <p class="text-muted">@post.Testo</p>
+                    <img src="" class="img-fluid rounded" alt="Immagine Post">
+                    <div class="d-flex justify-content-start mt-3">
+                        <button class="btn btn-outline-primary mr-*">
+                            <span class="material-icons">thumb_up</span> Mi piace
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <span class="material-icons">comment</span> Commenta
+                        </button>
+                    </div>
+                </div>
                 }
 
                 <div class="mt-4 space-y-2">
@@ -67,24 +99,46 @@
                     <p class="text-green-300 text-sm mt-2">@TempData["Success"]</p>
                 }
             </div>
+
+            <div id="content-comments" class="content-section d-none">
+                <p>Qui verranno mostrati i commenti dell'utente.</p>
+            </div>
+
+            <div id="content-upvoted" class="content-section d-none">
+                <p>Qui verranno mostrati i post upvotati dall'utente.</p>
+            </div>
+
+            <div id="content-saved" class="content-section d-none">
+                <p>Qui verranno mostrati i post salvati dall'utente.</p>
+            </div>
+        </div>
+
+
+        <!-- Sidebar Destra -->
+        <div class="col-md-4">
+        
+            <button class="btn btn-outline-secondary btn-lg pr-4">
+                <span class="material-icons">confirmation_number</span> Apri ticket
+            </button>
+            <button class="btn btn-outline-secondary btn-lg">
+                <span class="material-icons">forum</span> Forum
+            </button>
+        
+
+        <!-- Comunità Iscritte -->
+        <div class="sidebar-card p-2 mt-3">
+            <h5><span class="material-icons">groups</span> Comunità Iscritte</h5>
+            <ul class="list-unstyled">
+                @foreach (var forum in Model.Forums) {
+                <li><a href="#">r/@forum.Nome</a></li>
+                }
+                <li><a href="#">r/meme</a></li>
+            </ul>
         </div>
     </div>
-   
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <a href="@Url.Action("Create", "Ticket")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
-            <i class="fas fa-ticket-alt text-2xl mb-2"></i>
-            <h3 class="text-lg font-semibold">Apri Ticket</h3>
-        </a>
-        <a href="@Url.Action("Create", "Post")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
-            <i class="fas fa-edit text-2xl mb-2"></i>
-            <h3 class="text-lg font-semibold">Nuovo Post</h3>
-        </a>
-        <a href="@Url.Action("Index", "Forum")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
-            <i class="fas fa-comments text-2xl mb-2"></i>
-            <h3 class="text-lg font-semibold">Forum</h3>
-        </a>
-    </div>
+</div>
 
+<!--
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Ticket</h2>
@@ -122,9 +176,91 @@
                 }
             </div>
         </div>
-    </div>
-</div>
+    </div>-->
 
-@section Scripts {
-    <script src="https://kit.fontawesome.com/your-code.js"></script>
-}
+<style>
+        /* Header del profilo */
+        .profile-header {
+            border-bottom: 1px solid #dee2e6;
+            padding: 20px;
+        }
+
+        /* Immagine profilo circolare */
+        .profile-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+
+        .btn-outline-primary {
+            color: indigo;
+            border-color: indigo;
+        }
+        .btn-outline-primary:hover {
+            color: #fff;
+            background-color: indigo;
+            border-color: indigo;
+        }
+
+        .nav-pills .nav-link.active,
+        .nav-pills .show > .nav-link {
+            color: #fff;
+            background-color: indigo;
+        }
+
+        .nav-link {
+            color: indigo;
+        }
+
+        .nav-link:hover, .nav-link:focus {
+            color: rgb(141, 65, 195);
+        }
+
+        a {
+            color: indigo;
+        }
+
+        a:hover {
+            color: rgb(141, 65, 195);
+        }
+
+        /* Stile per i post */
+        .post-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            transition: box-shadow 0.3s;
+        }
+        .post-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Stile per la sidebar */
+        .sidebar-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+</style>
+
+<script>
+    const navLinks = document.querySelectorAll(".nav-link");
+    const content = document.querySelectorAll(".content-section");
+
+    // Funzione per gestire il cambio di sezione
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();  // Previene il ricaricamento della pagina
+            
+            // Rimuove la classe "active" da tutti i link
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            // Aggiunge la classe "active" al link cliccato
+            this.classList.add('active');
+
+            // Nasconde tutte le sezioni
+            contentSections.forEach(section => section.classList.add('d-none'));
+
+            // Mostra la sezione corrispondente
+            const targetId = this.getAttribute('href').substring(1);
+            document.getElementById(`content-${targetId}`).classList.remove('d-none');
+        });
+    });
+</script>

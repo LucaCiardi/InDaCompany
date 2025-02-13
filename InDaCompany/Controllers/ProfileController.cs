@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
+using InDaCompany.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +14,13 @@ namespace InDaCompany.Controllers
         IDAOUtenti DAOUtenti,
         IDAOTicket DAOTicket,
         IDAOPost DAOPost,
+        IDAOForum DAOForum,
         ILogger<ProfileController> logger) : BaseController(configuration, logger)
     {
         private readonly IDAOUtenti _daoUtenti = DAOUtenti;
         private readonly IDAOTicket _daoTicket = DAOTicket;
         private readonly IDAOPost _daoPost = DAOPost;
+        private readonly IDAOForum _daoForum = DAOForum;
 
         public async Task<IActionResult> Index()
         {
@@ -28,10 +32,18 @@ namespace InDaCompany.Controllers
                 if (user == null)
                     return NotFound();
 
-                ViewBag.RecentTickets = await _daoTicket.GetByCreatoDaIDAsync(userId);
-                ViewBag.RecentPosts = await _daoPost.GetByAutoreIDAsync(userId);
+                var ticketsByAuthor = await _daoTicket.GetByCreatoDaIDAsync(userId);
+                var postsByAuthor = await _daoPost.GetByAutoreIDAsync(userId);
+                var forumsOfAuthor = await _daoForum.GetForumByUser(user.Team == null ? "Sviluppo" : user.Team); //da sistemare il metodo
 
-                return View(user);
+                ProfileViewModel profileModel = new ProfileViewModel {
+                    Utente = user,
+                    Posts = postsByAuthor,
+                    Tickets = ticketsByAuthor,
+                    Forums = forumsOfAuthor
+                };
+
+                return View(profileModel);
             }
             catch (DAOException ex)
             {

@@ -7,21 +7,45 @@ using InDaCompany.Data.Interfaces;
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class ForumController(
-        IConfiguration configuration,
-        IDAOForum DAOForum,
-        ILogger<ForumController> logger) : BaseController(configuration, logger)
+    public class ForumController : BaseController
     {
-        private readonly IDAOForum _daoForum = DAOForum;
+        private readonly IDAOMessaggiThread _daoMessaggiThread;
+        private readonly IDAOThreadForum _daoThreadForum;
+        private readonly IDAOForum _daoForum;
+        private readonly ILogger<HomeController> logger;
+
+        public ForumController(
+            IConfiguration configuration,
+            ILogger<HomeController> Logger,
+            IDAOForum daoForum,
+            IDAOThreadForum daoThreadForum,
+            IDAOMessaggiThread daoMessaggiThread)
+            : base(configuration, Logger)
+        {
+            _daoForum = daoForum;
+            _daoThreadForum = daoThreadForum;
+            _daoMessaggiThread = daoMessaggiThread;
+            logger = Logger;
+        }
 
         public async Task<IActionResult> Index()
         {
             try
             {
+                logger.LogInformation("Accessing home page");
                 var forums = await _daoForum.GetAllAsync();
-                return View(forums);
+                var threads = await _daoThreadForum.GetAllAsync();
+                var messages = await _daoMessaggiThread.GetAllAsync();
+
+                var model = new ForumViewModel
+                {
+                    Forum = forums ?? new List<Forum>(),
+                    Threads = threads ?? new List<ThreadForum>(),
+                    Messages = messages ?? new List<MessaggioThread>()
+                };
+                return View(model);
             }
-            catch (DAOException ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Error retrieving forums");
                 return HandleException(ex);
