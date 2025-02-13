@@ -13,21 +13,41 @@ html {
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    height: 100%; 
+    position: relative;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
 }
-
 body {
   margin-bottom: 60px;
   background-color: rgb(251, 248, 255) !important;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 60px;
+    display: flex;
+    flex-direction: column;
 }
 
-.navbar{
-  padding: 10px 20px;
+.navbar {
+    height: 70px !important; 
+    padding: 0 20px !important;
+    background-color: indigo !important;
+    width: 100%;
 }
 
-.navbar-brand{
-  font-size: 1.5rem;
+.navbar-brand {
+    font-size: 1.5rem !important;
+    height: 70px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.navbar .container-fluid {
+    height: 100% !important;
+}
+.navbar-collapse {
+    height: 70px !important;
+    align-items: center !important;
 }
 
 .navbar .form-control{
@@ -51,10 +71,16 @@ navbar-nav .nav-link i:hover{
 }
 
 footer {
-  position: absolute;
-  bottom:0;
-  width: 100%;
-  font-size: 0.9rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background-color: indigo;
+    margin: 0;
+    padding: 0;
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
 }
 
 .like-button {
@@ -80,4 +106,13 @@ footer {
   color: white;
   padding: 10px;
   list-style: none;
+}
+.container {
+    flex: 1 0 auto;
+    padding-bottom: 60px;
+}
+footer .container {
+    padding: 0;
+    margin: 0; 
+    text-align: center; 
 }
