@@ -3,24 +3,24 @@
     ViewData["Title"] = "Forum";
 }
 <div class="container mt-4">
-    <h2 class="text-white">@Model.Forum</h2>
-    <button class="btn btn-primary my-3" id="btnCreateThread"></button>
-    <div id="createThreadForm" class="d-none">
-        <input type="text" id="threadTitle" class="form-control mb-2" placeholder="Titolo">
-        <textarea id="threadContent" class="form-control mb-2" placeholder="Contenuto"></textarea>
-        <button class="btn btn-success" id="submitThread">Pubblica</button>
+    <h1 class="forum-title"> Forum Team @Model.Forum.</h1>
+    <button class="btn btn-indigo my-3 rounded-pill" id="btnCreateThread"></button>
+    <div id="createThreadForm" class="d-none p-3 bg-light rounded">
+        <input type="text" id="threadTitle" class="form-control mb-2 rounded-pill" placeholder="Titolo">
+        <textarea id="threadContent" class="form-control mb-2 rounded" placeholder="Contenuto"></textarea>
+        <button class="btn btn-indigo rounded-pill" id="submitThread">Pubblica</button>
     </div>
     <ul class="list-group">
         @foreach (var thread in Model.Threads)
         {
-            <li class="list-group-item text-white bg-dark thread-item">
-                <h3>@thread.Titolo</h3>
+            <li class="list-group-item rounded mb-3 thread-item">
+                <h4 class="text-indigo">@thread.Titolo</h4>
                 <p>Data: @thread.DataCreazione</p>
 
-                <button class="btn btn-light btn-sm btnComment" data-thread-id="@thread.ID">Commenta</button>
-                <div class="comments d-none" id="comments-@thread.ID">
-                    <textarea class="form-control my-2" placeholder="Scrivi un commento..."></textarea>
-                    <button class="btn btn-success btn-sm">Invia</button>
+                <button class="btn btn-outline-indigo btn-sm rounded-pill btnComment" data-thread-id="@thread.ID">Commenta</button>
+                <div class="comments d-none p-2 mt-2 bg-light border rounded shadow-sm" id="comments-@thread.ID">
+                    <textarea class="form-control my-2 rounded" placeholder="Scrivi un commento..."></textarea>
+                    <button class="btn btn-indigo btn-sm rounded pill">Invia</button>
                 </div>
             </li>
         }
