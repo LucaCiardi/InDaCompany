@@ -238,5 +238,99 @@ namespace InDaCompany.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfilePicture(int id, IFormFile? profilePicture, string action)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    return NotFound();
+                }
+
+                if (action == "remove")
+                {
+                    utente.FotoProfilo = null;
+                    TempData["Success"] = "Foto profilo rimossa con successo";
+                }
+                else if (profilePicture != null && profilePicture.Length > 0)
+                {
+                    // Validate file type
+                    if (!profilePicture.ContentType.StartsWith("image/"))
+                    {
+                        TempData["Error"] = "Il file deve essere un'immagine";
+                        return RedirectToAction("Index");
+                    }
+
+                    // Check file size (2MB limit)
+                    if (profilePicture.Length > 2 * 1024 * 1024)
+                    {
+                        TempData["Error"] = "L'immagine non può superare i 2MB";
+                        return RedirectToAction("Index");
+                    }
+
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await profilePicture.CopyToAsync(memoryStream);
+                        utente.FotoProfilo = memoryStream.ToArray();
+                    }
+                    TempData["Success"] = "Foto profilo aggiornata con successo";
+                }
+
+                await _daoUtenti.UpdateAsync(utente);
+                return RedirectToAction("Index", "Profile");
+
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveProfilePicture(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    return NotFound();
+                }
+
+                utente.FotoProfilo = null;
+                await _daoUtenti.UpdateAsync(utente);
+
+                TempData["Success"] = "Foto profilo rimossa con successo";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
+        }
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProfilePicture(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente?.FotoProfilo == null)
+                {
+                    return NotFound();
+                }
+
+                return File(utente.FotoProfilo, "image/jpeg");
+            }
+            catch (DAOException ex)
+            {
+                logger.LogError(ex, "Error retrieving profile picture for user: {Id}", id);
+                return HandleException(ex);
+            }
+        }
+
     }
 }

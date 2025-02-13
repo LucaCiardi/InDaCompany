@@ -32,5 +32,6 @@ namespace InDaCompany.Models
         public string? Team { get; set; }
 
         public DateTime DataCreazione { get; set; }
+        public byte[]? FotoProfilo { get; set; }
     }
 }

@@ -10,8 +10,8 @@ namespace InDaCompany.Data.Implementations
         public async Task<List<Utente>> GetAllAsync()
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti";
+            SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+            FROM Utenti";
             var utenti = new List<Utente>();
 
             using var conn = CreateConnection();
@@ -36,9 +36,9 @@ namespace InDaCompany.Data.Implementations
         public async Task<Utente?> GetByIdAsync(int id)
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti 
-                WHERE ID = @ID";
+            SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+            FROM Utenti 
+            WHERE ID = @ID";
             var parameters = new[] { new SqlParameter("@ID", id) };
 
             return await ExecuteQuerySingleAsync(query, parameters);
@@ -47,9 +47,9 @@ namespace InDaCompany.Data.Implementations
         public async Task<int> InsertAsync(Utente entity)
         {
             const string query = @"
-                INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team) 
-                VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team);
-                SELECT SCOPE_IDENTITY();";
+            INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, FotoProfilo) 
+            VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @FotoProfilo);
+            SELECT SCOPE_IDENTITY();";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
@@ -60,6 +60,7 @@ namespace InDaCompany.Data.Implementations
             cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
             cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
             cmd.Parameters.AddWithValue("@Team", (object?)entity.Team ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value);
 
             try
             {
@@ -76,14 +77,15 @@ namespace InDaCompany.Data.Implementations
         public async Task UpdateAsync(Utente entity)
         {
             const string query = @"
-                UPDATE Utenti 
-                SET Nome = @Nome,
-                    Cognome = @Cognome,
-                    Email = @Email,
-                    PasswordHash = @PasswordHash,
-                    Ruolo = @Ruolo,
-                    Team = @Team
-                WHERE ID = @ID";
+            UPDATE Utenti 
+            SET Nome = @Nome,
+                Cognome = @Cognome,
+                Email = @Email,
+                PasswordHash = @PasswordHash,
+                Ruolo = @Ruolo,
+                Team = @Team,
+                FotoProfilo = @FotoProfilo
+            WHERE ID = @ID";
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
@@ -95,6 +97,7 @@ namespace InDaCompany.Data.Implementations
             cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
             cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
             cmd.Parameters.AddWithValue("@Team", (object?)entity.Team ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value);
 
             try
             {
@@ -147,12 +150,16 @@ namespace InDaCompany.Data.Implementations
                 Team = reader.IsDBNull(reader.GetOrdinal("Team"))
                     ? null
                     : reader.GetString(reader.GetOrdinal("Team")),
-                DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
+                DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione")),
+                FotoProfilo = reader.IsDBNull(reader.GetOrdinal("FotoProfilo"))
+                ? null
+                : (byte[])reader.GetValue(reader.GetOrdinal("FotoProfilo"))
             };
         }
         //todo: update with a real password hashing - AS IS password is just plain text
         //todo: update with async method
-        public Utente Authenticate(string username, string password) {
+        public Utente Authenticate(string username, string password)
+        {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash, Ruolo FROM Utenti WHERE Email = @Username AND PasswordHash = @Password", conn);
             cmd.Parameters.AddWithValue("@Username", username);
@@ -160,8 +167,10 @@ namespace InDaCompany.Data.Implementations
             conn.Open();
             using var reader = cmd.ExecuteReader();
 
-            if (reader.Read()) {
-                return new Utente {
+            if (reader.Read())
+            {
+                return new Utente
+                {
                     ID = reader.GetInt32(0),
                     Email = reader.GetString(1),
                     PasswordHash = reader.GetString(2),
@@ -171,5 +180,26 @@ namespace InDaCompany.Data.Implementations
             return null;
 
         }
+        public async Task UpdateProfilePictureAsync(int userId, byte[] imageData)
+        {
+            const string query = "UPDATE Utenti SET FotoProfilo = @FotoProfilo WHERE ID = @ID";
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@ID", userId);
+            cmd.Parameters.AddWithValue("@FotoProfilo", (object?)imageData ?? DBNull.Value);
+
+            try
+            {
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Error updating profile picture for user {userId}", ex);
+            }
+        }
     }
 }
+

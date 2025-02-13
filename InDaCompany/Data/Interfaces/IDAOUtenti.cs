@@ -12,6 +12,6 @@ namespace InDaCompany.Data.Interfaces
         public  Task DeleteAsync(int id);
         public Task<bool> ExistsAsync(int id);
         public Utente Authenticate(string username, string password);
-
+        Task UpdateProfilePictureAsync(int userId, byte[] imageData);
     }
 }

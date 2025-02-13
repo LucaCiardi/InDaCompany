@@ -1,4 +1,5 @@
-﻿@model Utente
+﻿
+@model Utente
 @{
     ViewData["Title"] = "Profilo";
 }
@@ -6,8 +7,17 @@
 <div class="profile-container bg-indigo-100 min-h-screen p-8">
     <div class="bg-indigo-700 rounded-lg shadow-lg p-6 mb-8">
         <div class="flex items-center">
-            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center">
-                <span class="text-4xl text-white">@Model.Nome[0]@Model.Cognome[0]</span>
+            <div class="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center overflow-hidden">
+                @if (Model.FotoProfilo != null)
+                {
+                    <img src="@Url.Action("GetProfilePicture", "Utenti", new { id = Model.ID })"
+                         alt="Profile Picture"
+                         class="w-full h-full object-cover" />
+                }
+                else
+                {
+                    <span class="text-4xl text-white">@Model.Nome[0]@Model.Cognome[0]</span>
+                }
             </div>
             <div class="ml-6 text-white">
                 <h1 class="text-3xl font-bold">@Model.Nome @Model.Cognome</h1>
@@ -17,10 +27,49 @@
                 {
                     <p class="text-indigo-200">Team: @Model.Team</p>
                 }
+
+                <div class="mt-4 space-y-2">
+                    <!-- Single Form for both Upload and Remove -->
+                    <form asp-action="UpdateProfilePicture"
+                          asp-controller="Utenti"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="flex items-center space-x-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.ID" />
+                        <input type="file"
+                               name="profilePicture"
+                               accept="image/*"
+                               class="text-sm text-indigo-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600" />
+                        <button type="submit"
+                                name="action"
+                                value="upload"
+                                class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-full text-sm">
+                            @(Model.FotoProfilo != null ? "Aggiorna Foto" : "Carica Foto")
+                        </button>
+                        @if (Model.FotoProfilo != null)
+                        {
+                            <button type="submit"
+                                    name="action"
+                                    value="remove"
+                                    class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-full text-sm">
+                                Rimuovi Foto
+                            </button>
+                        }
+                    </form>
+                </div>
+                @if (TempData["Error"] != null)
+                {
+                    <p class="text-red-300 text-sm mt-2">@TempData["Error"]</p>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <p class="text-green-300 text-sm mt-2">@TempData["Success"]</p>
+                }
             </div>
         </div>
     </div>
-
+   
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <a href="@Url.Action("Create", "Ticket")" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-4 text-center transition-colors">
             <i class="fas fa-ticket-alt text-2xl mb-2"></i>
@@ -56,7 +105,7 @@
                 }
             </div>
         </div>
-
+       
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Post</h2>
             <div class="space-y-4">
