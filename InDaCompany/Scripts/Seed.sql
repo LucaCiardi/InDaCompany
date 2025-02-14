@@ -33,9 +33,9 @@ INSERT INTO Ticket (Titolo, Descrizione, Stato, CreatoDaID, AssegnatoAID, DataAp
 ('Software Update', 'Aggiornamento software', 'Aperto', 2, 3, CONVERT(DATETIME, '23/01/2024', 103)),
 ('Printer Support', 'Problema stampante', 'In lavorazione', 3, 5, CONVERT(DATETIME, '24/01/2024', 103));
 
-INSERT INTO Likes (UtenteID, ThreadForum, MiPiace) VALUES
-(2, 1, 1),
-(3, 1, 1),
-(4, 2, 1),
-(5, 3, 1),
-(1, 4, 1);
+INSERT INTO Likes (UtenteID, ThreadID, MiPiace, DataLike) VALUES
+(2, 1, 1, CONVERT(DATETIME, '15/01/2024', 103)),
+(3, 1, 1, CONVERT(DATETIME, '15/01/2024', 103)),
+(4, 2, 1, CONVERT(DATETIME, '16/01/2024', 103)),
+(5, 3, 1, CONVERT(DATETIME, '17/01/2024', 103)),
+(1, 4, 1, CONVERT(DATETIME, '18/01/2024', 103));
