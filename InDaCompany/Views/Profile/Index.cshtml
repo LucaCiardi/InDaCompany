@@ -61,8 +61,27 @@
             </div>
 
             <div id="content-comments" class="content-section d-none">
-                <p>Qui verranno mostrati i commenti dell'utente.</p>
+                <!-- Post Singolo -->
+                @foreach (var thread in Model.ThreadForums) {
+                <div class="post-card mb-3 p-3">
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">@thread.Titolo • @thread.DataCreazione.ToString("d")</span>
+                    </div>
+                    <p class="text-muted">@thread.Testo</p>
+                    <img src="" class="img-fluid rounded" alt="Immagine Post">
+                    <div class="d-flex justify-content-start mt-3">
+                        <button class="btn btn-outline-primary" id="button">
+                            <span class="material-icons">thumb_up</span> Mi piace
+                        </button>
+                        <button class="btn btn-outline-secondary" id="button">
+                            <span class="material-icons">comment</span> Commenta
+                        </button>
+                    </div>
+                </div>
+                }
             </div>
+            
 
             <div id="content-upvoted" class="content-section d-none">
                 <p>Qui verranno mostrati i post upvotati dall'utente.</p>
@@ -77,10 +96,10 @@
         <!-- Sidebar Destra -->
         <div class="col-md-4">
         
-            <a asp-action="Create" asp-controller="Ticket" class="btn btn-outline-secondary btn-lg pr-4">
+            <a asp-action="Create" asp-controller="Ticket" class="btn btn-lg pr-4" id="btn-indigo">
                 <span class="material-icons">confirmation_number</span> Apertura ticket
             </a>
-            <a asp-action="Index" asp-controller="Forum" class="btn btn-outline-secondary btn-lg">
+            <a asp-action="Index" asp-controller="Forum" class="btn btn-lg" id="btn-indigo">
                 <span class="material-icons">forum</span> Forum
             </a>
         
@@ -161,18 +180,29 @@
             background-color: indigo;
             border-color: indigo;
         }
+        
+        #btn-indigo {
+            color: #fff;
+            background-color: indigo;
+            border-color: indigo;
+        }
 
-        .nav-pills .nav-link.active,
-        .nav-pills .show > .nav-link {
+    #btn-indigo:hover {
+        color: #fff;
+        background-color: rgb(141, 65, 195);
+        border-color: indigo;
+    }
+        .nav-pills #nav-custom.active,
+        .nav-pills .show > #nav-custom {
             color: #fff;
             background-color: indigo;
         }
 
-        .nav-link {
+        #nav-custom {
             color: indigo;
         }
 
-        .nav-link:hover, .nav-link:focus {
+        #nav-custom:hover, #nav-custom:focus {
             color: rgb(141, 65, 195);
         }
 

@@ -18,17 +18,35 @@
             </div>
             <div class="form-group">
                 <label asp-for="Descrizione" class="control-label"></label>
-                <input asp-for="Descrizione" class="form-control" />
+                <textarea asp-for="Descrizione" class="form-control" rows="3"/></textarea>
                 <span asp-validation-for="Descrizione" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-dark">
+                <a asp-action="Create" class="btn btn-indigo" id="btn-indigo">
                     <i class="bi bi-save me-2"></i> Crea
-                </button>
-                <a asp-action="Index" class="btn-dark btn-dark">
+                </a>
+                <a asp-action="Index" class="btn btn-indigo" id="btn-indigo">
                     <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
                 </a>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    #btn-indigo {
+        margin-top: 0.75rem;
+    }
+
+    #btn-indigo {
+        color: #fff;
+        background-color: indigo;
+        border-color: indigo;
+    }
+
+    #btn-indigo:hover {
+        color: #fff;
+        background-color: rgb(141, 65, 195);
+        border-color: indigo;
+    }
+</style>
