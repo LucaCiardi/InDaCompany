@@ -15,12 +15,14 @@ namespace InDaCompany.Controllers
         IDAOTicket DAOTicket,
         IDAOPost DAOPost,
         IDAOForum DAOForum,
+        IDAOThreadForum DAOThreadForum,
         ILogger<ProfileController> logger) : BaseController(configuration, logger)
     {
         private readonly IDAOUtenti _daoUtenti = DAOUtenti;
         private readonly IDAOTicket _daoTicket = DAOTicket;
         private readonly IDAOPost _daoPost = DAOPost;
         private readonly IDAOForum _daoForum = DAOForum;
+        private readonly IDAOThreadForum _daoThreadForum = DAOThreadForum;
 
         public async Task<IActionResult> Index()
         {
@@ -34,12 +36,14 @@ namespace InDaCompany.Controllers
 
                 var ticketsByAuthor = await _daoTicket.GetByCreatoDaIDAsync(userId);
                 //var postsByAuthor = await _daoPost.GetByAutoreIDAsync(userId);
-                var forumsOfAuthor = await _daoForum.GetForumByUser(user.Team == null ? "Generale" : user.Team);
+                var threadByAuthor = await _daoThreadForum.GetAllAsync();
+                var forumsOfAuthor = await _daoForum.GetForumByUser(user.Email);
 
                 ProfileViewModel profileModel = new ProfileViewModel {
                     Utente = user,
                     Tickets = ticketsByAuthor,
-                    Forums = forumsOfAuthor
+                    Forums = forumsOfAuthor,
+                    ThreadForums = threadByAuthor
                 };
 
                 return View(profileModel);
