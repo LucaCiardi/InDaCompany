@@ -4,6 +4,9 @@
     ViewData["Title"] = "Ticket";
 }
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <div class="text-center mb-5">
     <h2 class="display-4 text-indigo">
         <i class="bi bi-ticket-detailed"></i> Ticket System
@@ -24,6 +27,7 @@
         <tr>
             <th>ID</th>
             <th>Utente</th>
+            <th>Titolo</th>
             <th>Descrizione</th>
             <th>Stato</th>
             <th>Data Apertura</th>
@@ -35,6 +39,7 @@
             <tr>
                 <td>@item.ID</td>
                 <td>@item.CreatoDaID</td>
+                <td>@item.Titolo</td>
                 <td>@item.Descrizione</td>
                 <td>@item.Stato</td>
                 <td>@item.DataApertura.ToString("dd/MM/yyyy")</td>
@@ -42,7 +47,7 @@
                     <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
                         <i class="bi bi-pencil"></i> Modifica
                     </a>
-                    <a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-danger btn-sm">
+                    <a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
                         <i class="bi bi-trash"></i> Elimina
                     </a>
                 </td>
@@ -50,6 +55,42 @@
         }
     </tbody>
 </table>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="testoDelModal"class="modal-body">
+                Sei sicuro di voler eliminare questo ticket?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="post" asp-action="DeleteConfirmed">
+                    <input type="hidden" name="id" id="deleteId">
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.deleteButton').click(function (e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+
+            $('#testoDelModal').text('Sei sicuro di voler eliminare il ticket #' + id + ' ?');
+
+            $('#deleteId').val(id);
+
+            $('#confirmDeleteModal').modal('show');
+        });
+    });
+</script>
 
 <style>
     .text-indigo {
@@ -72,3 +113,4 @@
         border: 1px solid indigo;
     }
 </style>
+

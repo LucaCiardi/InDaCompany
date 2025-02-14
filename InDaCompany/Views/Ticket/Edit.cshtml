@@ -1,16 +1,16 @@
-@model InDaCompany.Models.Ticket
+﻿@model InDaCompany.Models.Ticket
 
 @{
-    ViewData["Title"] = "Create Ticket";
+    ViewData["Title"] = "Edit Ticket";
 }
 
-<h1>Crea un nuovo Ticket d'assistenza</h1>
+<h1>Modifica il Ticket d'assistenza #@Model.ID</h1>
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create">
+        <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
+
             <div class="form-group">
                 <label asp-for="Titolo" class="control-label"></label>
                 <input asp-for="Titolo" class="form-control" />
@@ -18,12 +18,27 @@
             </div>
             <div class="form-group">
                 <label asp-for="Descrizione" class="control-label"></label>
-                <textarea asp-for="Descrizione" class="form-control" rows="3"></textarea>
+                <textarea asp-for="Descrizione" class="form-control" rows="3"> </textarea>
                 <span asp-validation-for="Descrizione" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <a asp-action="Create" class="btn btn-indigo" id="btn-indigo">
-                    <i class="bi bi-save me-2"></i> Crea
+                <label asp-for="DataApertura" class="control-label"></label>
+                <input asp-for="DataApertura" class="form-control" rows="3" disabled> </input>
+            </div>
+            <div class="form-group">
+                <label asp-for="Stato" class="control-label"></label>
+                <select asp-for="Stato" class="form-control">
+                    <option value="Aperto">Aperto</option>
+                    <option value="In lavorazione">In lavorazione</option>
+                    <option value="Chiuso">Chiuso</option>
+                </select>                
+                <span asp-validation-for="Stato" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <a asp-action="Edit" class="btn btn-indigo" id="btn-indigo">
+                    <i class="bi bi-save me-2"></i> Salva Modifiche
                 </a>
                 <a asp-action="Index" class="btn btn-indigo" id="btn-indigo">
                     <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
