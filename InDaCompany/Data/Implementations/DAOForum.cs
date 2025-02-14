@@ -38,7 +38,8 @@ namespace InDaCompany.Data.Implementations
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
-        public async Task<List<Forum>> GetForumByUser(string mailUser) {
+        public async Task<List<Forum>> GetForumByUser(string mailUser)
+        {
 
             const string query = @"
                 SELECT Forum.ID, Forum.Nome, Forum.Descrizione, Forum.Team

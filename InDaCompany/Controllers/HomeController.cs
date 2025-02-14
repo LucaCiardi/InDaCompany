@@ -1,84 +1,70 @@
-using System.Diagnostics;
-using InDaCompany.Models;
 using InDaCompany.Data.Interfaces;
+using InDaCompany.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
-namespace InDaCompany.Controllers
+[Authorize]
+public class HomeController : BaseController
 {
-    [Authorize]
-    public class HomeController : BaseController
+    private readonly IDAOThreadForum _daoThreadForum;
+    private readonly IDAOForum _daoForum;
+
+    public HomeController(
+        ILogger<HomeController> logger,
+        IDAOThreadForum daoThreadForum,
+        IDAOForum daoForum)
+        : base(logger)
     {
-        private readonly IDAOPost _daoPost;
-        private readonly IDAOThreadForum _daoThreadForum;
-        private readonly ILogger<HomeController> _logger;
+        _daoThreadForum = daoThreadForum;
+        _daoForum = daoForum;
+    }
 
-        public HomeController(
-            IConfiguration configuration,
-            ILogger<HomeController> logger,
-            IDAOPost daoPost,
-            IDAOThreadForum daoThreadForum)
-            : base(configuration, logger)
+    public async Task<IActionResult> Index()
+    {
+        try
         {
-            _daoPost = daoPost;
-            _daoThreadForum = daoThreadForum;
-            _logger = logger;
-        }
+            Logger.LogInformation("Accessing home page");
 
-        public async Task<IActionResult> Index()
-        {
-            try
+            var threads = await _daoThreadForum.GetAllAsync();
+            var forums = await _daoForum.GetAllAsync();
+
+            var model = new HomeViewModel
             {
-                _logger.LogInformation("Accessing home page");
-
-                //var posts = await _daoPost.GetAllAsync();
-                var threads = await _daoThreadForum.GetAllAsync();
-
-                var model = new HomeViewModel
-                {
-                    
-                    Threads = threads ?? new List<ThreadForum>()
-                };
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error accessing home page");
-                return HandleException(ex);
-            }
-        }
-
-        [AllowAnonymous]
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            try
-            {
-                _logger.LogInformation("Accessing privacy page");
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error accessing privacy page");
-                return HandleException(ex);
-            }
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            var errorViewModel = new ErrorViewModel
-            {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                Threads = threads,
+                Forums = forums
             };
 
-            _logger.LogError("Error page accessed. RequestId: {RequestId}", errorViewModel.RequestId);
-            return View(errorViewModel);
+            return View(model);
         }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error accessing home page");
+            return HandleException(ex);
+        }
+    }
+
+    [AllowAnonymous]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error([FromQuery] string? message)
+    {
+        var errorViewModel = new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+            ErrorMessage = message
+        };
+
+        Logger.LogError("Error page accessed. RequestId: {RequestId}", errorViewModel.RequestId);
+        return View(errorViewModel);
     }
 }

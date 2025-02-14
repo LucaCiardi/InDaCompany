@@ -1,16 +1,25 @@
 ﻿using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers
 {
-    public class MessaggiThreadController(
-        IConfiguration configuration,
-        IDAOMessaggiThread DAOMessaggiThread,
-        ILogger<MessaggiThreadController> logger) : BaseController(configuration, logger)
+    [Authorize]
+    public class MessaggiThreadController : BaseController
     {
-        private readonly IDAOMessaggiThread _daoMessaggiThread = DAOMessaggiThread;
+        private readonly IDAOMessaggiThread _daoMessaggiThread;
+        private readonly ILogger<MessaggiThreadController> _logger;
+
+        public MessaggiThreadController(
+            ILogger<MessaggiThreadController> logger,
+            IDAOMessaggiThread daoMessaggiThread)
+            : base(logger)
+        {
+            _daoMessaggiThread = daoMessaggiThread;
+            _logger = logger;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -21,11 +30,11 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving messages");
+                _logger.LogError(ex, "Errore durante il recupero dei messaggi");
                 return HandleException(ex);
             }
         }
-
+        [HttpGet]
         public IActionResult Create()
         {
             return View(new MessaggioThread());
@@ -33,23 +42,22 @@ namespace InDaCompany.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MessaggioThread messaggio)
+        public async Task<IActionResult> Create([Bind("ThreadID,Testo")] MessaggioThread messaggio)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Assuming you have a method to get the current user's ID
-                    int userId = GetCurrentUserId();
+                    messaggio.AutoreID = GetCurrentUserId();
                     await _daoMessaggiThread.InsertAsync(messaggio);
 
-                    logger.LogInformation("Message created successfully for thread {ThreadId}", messaggio.ThreadID);
+                    _logger.LogInformation("Messaggio creato con successo per il thread {ThreadId}", messaggio.ThreadID);
                     TempData["Success"] = "Messaggio creato con successo!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error creating message");
+                    _logger.LogError(ex, "Errore durante la creazione del messaggio");
                     TempData["Error"] = "Errore durante la creazione del messaggio";
                     return View(messaggio);
                 }
@@ -57,6 +65,7 @@ namespace InDaCompany.Controllers
             return View(messaggio);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -64,24 +73,31 @@ namespace InDaCompany.Controllers
                 var messaggio = await _daoMessaggiThread.GetByIdAsync(id);
                 if (messaggio == null)
                 {
-                    logger.LogWarning("Message not found: {Id}", id);
+                    _logger.LogWarning("Messaggio non trovato: {Id}", id);
                     return NotFound();
                 }
+
+                if (messaggio.AutoreID != GetCurrentUserId())
+                {
+                    _logger.LogWarning("Tentativo non autorizzato di modificare il messaggio: {Id}", id);
+                    return Forbid();
+                }
+
                 return View(messaggio);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving message for edit: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero del messaggio: {Id}", id);
                 return HandleException(ex);
             }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, MessaggioThread messaggio)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,ThreadID,Testo")] MessaggioThread messaggio)
         {
             if (id != messaggio.ID)
             {
+                _logger.LogWarning("ID messaggio non corrispondente");
                 return NotFound();
             }
 
@@ -95,25 +111,32 @@ namespace InDaCompany.Controllers
                         return NotFound();
                     }
 
+                    // Verify that the current user is the author
+                    if (original.AutoreID != GetCurrentUserId())
+                    {
+                        _logger.LogWarning("Tentativo non autorizzato di modificare il messaggio: {Id}", id);
+                        return Forbid();
+                    }
+
                     // Preserve original values
                     messaggio.DataCreazione = original.DataCreazione;
                     messaggio.AutoreID = original.AutoreID;
 
                     await _daoMessaggiThread.UpdateAsync(messaggio);
-                    logger.LogInformation("Message updated successfully: {Id}", id);
+                    _logger.LogInformation("Messaggio aggiornato con successo: {Id}", id);
                     TempData["Success"] = "Messaggio modificato con successo";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error updating message: {Id}", id);
+                    _logger.LogError(ex, "Errore durante l'aggiornamento del messaggio: {Id}", id);
                     TempData["Error"] = "Errore durante la modifica del messaggio";
                     return View(messaggio);
                 }
             }
             return View(messaggio);
         }
-
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -121,14 +144,22 @@ namespace InDaCompany.Controllers
                 var messaggio = await _daoMessaggiThread.GetByIdAsync(id);
                 if (messaggio == null)
                 {
-                    logger.LogWarning("Message not found for deletion: {Id}", id);
+                    _logger.LogWarning("Messaggio non trovato per l'eliminazione: {Id}", id);
                     return NotFound();
                 }
+
+                // Verify that the current user is the author
+                if (messaggio.AutoreID != GetCurrentUserId())
+                {
+                    _logger.LogWarning("Tentativo non autorizzato di eliminare il messaggio: {Id}", id);
+                    return Forbid();
+                }
+
                 return View(messaggio);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving message for deletion: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero del messaggio per l'eliminazione: {Id}", id);
                 return HandleException(ex);
             }
         }
@@ -145,14 +176,21 @@ namespace InDaCompany.Controllers
                     return NotFound();
                 }
 
+                // Verify that the current user is the author
+                if (messaggio.AutoreID != GetCurrentUserId())
+                {
+                    _logger.LogWarning("Tentativo non autorizzato di eliminare il messaggio: {Id}", id);
+                    return Forbid();
+                }
+
                 await _daoMessaggiThread.DeleteAsync(id);
-                logger.LogInformation("Message deleted successfully: {Id}", id);
+                _logger.LogInformation("Messaggio eliminato con successo: {Id}", id);
                 TempData["Success"] = "Messaggio eliminato con successo";
                 return RedirectToAction(nameof(Index));
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error deleting message: {Id}", id);
+                _logger.LogError(ex, "Errore durante l'eliminazione del messaggio: {Id}", id);
                 TempData["Error"] = "Errore durante l'eliminazione del messaggio";
                 return RedirectToAction(nameof(Index));
             }
@@ -163,7 +201,7 @@ namespace InDaCompany.Controllers
             var userIdClaim = User.FindFirst("UserId");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                throw new InvalidOperationException("User not properly authenticated");
+                throw new InvalidOperationException("Utente non autenticato correttamente");
             }
             return userId;
         }

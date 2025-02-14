@@ -1,16 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace InDaCompany.Models {
-
+namespace InDaCompany.Models
+{
     public class LoginModel
     {
-        [Required]
-        public string Username { get; set; }
+        [Required(ErrorMessage = "L'indirizzo email è obbligatorio")]
+        [EmailAddress(ErrorMessage = "Inserire un indirizzo email valido")]
+        [Display(Name = "Email")]
+        public string Username { get; set; } = null!;
 
-        [Required]
+        [Required(ErrorMessage = "La password è obbligatoria")]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        [Display(Name = "Password")]
+        public string Password { get; set; } = null!;
 
+        [Display(Name = "Ricordami")]
         public bool RememberMe { get; set; }
     }
 }

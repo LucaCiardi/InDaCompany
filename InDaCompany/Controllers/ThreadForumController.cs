@@ -7,14 +7,24 @@ using InDaCompany.Data.Implementations;
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class ThreadForumController(
-        IConfiguration configuration,
-        IDAOThreadForum DAOThread,
-        IDAOForum DAOForum,
-        ILogger<ThreadForumController> logger) : BaseController(configuration, logger)
+    public class ThreadForumController : BaseController
     {
-        private readonly IDAOForum _daoForum = DAOForum;
+        private readonly IDAOThreadForum _daoThread;
+        private readonly IDAOForum _daoForum;
+        private readonly ILogger<ThreadForumController> _logger;
 
+        public ThreadForumController(
+            ILogger<ThreadForumController> logger,
+            IDAOThreadForum daoThread,
+            IDAOForum daoForum)
+            : base(logger)
+        {
+            _daoThread = daoThread;
+            _daoForum = daoForum;
+            _logger = logger;
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create(int forumId)
         {
             try
@@ -22,6 +32,7 @@ namespace InDaCompany.Controllers
                 var forum = await _daoForum.GetByIdAsync(forumId);
                 if (forum == null)
                 {
+                    _logger.LogWarning("Forum non trovato: {Id}", forumId);
                     return NotFound();
                 }
 
@@ -30,41 +41,41 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error preparing thread creation for forum: {Id}", forumId);
+                _logger.LogError(ex, "Errore durante la preparazione del thread per il forum: {Id}", forumId);
                 return HandleException(ex);
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ThreadForum thread)
+        public async Task<IActionResult> Create([Bind("ForumID,Titolo,Testo")] ThreadForum thread)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
                     thread.AutoreID = int.Parse(User.FindFirst("UserId")?.Value ??
-                        throw new InvalidOperationException("User not authenticated"));
+                        throw new InvalidOperationException("Utente non autenticato"));
 
-                    await DAOThread.InsertAsync(thread);
-                    logger.LogInformation("Thread created successfully in forum: {ForumId}", thread.ForumID);
+                    await _daoThread.InsertAsync(thread);
+                    _logger.LogInformation("Thread creato con successo nel forum: {ForumId}", thread.ForumID);
                     return RedirectToAction("Details", "Forum", new { id = thread.ForumID });
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error creating thread");
-                    ModelState.AddModelError("", "Unable to create thread. Please try again.");
+                    _logger.LogError(ex, "Errore durante la creazione del thread");
+                    ModelState.AddModelError("", "Impossibile creare il thread. Riprova.");
                 }
             }
 
             try
             {
                 var forum = await _daoForum.GetByIdAsync(thread.ForumID);
-                ViewBag.ForumName = forum?.Nome ?? "Unknown Forum";
+                ViewBag.ForumName = forum?.Nome ?? "Forum sconosciuto";
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving forum name");
+                _logger.LogError(ex, "Errore durante il recupero del nome del forum");
             }
 
             return View(thread);

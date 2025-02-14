@@ -2,35 +2,20 @@
 using InDaCompany.Models;
 using Microsoft.Data.SqlClient;
 
-
 namespace InDaCompany.Data.Implementations
 {
-    public class DAOUtenti(string connectionString) : DAOBase<Utente>(connectionString), IDAOUtenti
+    public class DAOUtenti : DAOBase<Utente>, IDAOUtenti
     {
+        public DAOUtenti(string connectionString) : base(connectionString) { }
+
         public async Task<List<Utente>> GetAllAsync()
         {
             const string query = @"
                 SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti";
-            var utenti = new List<Utente>();
+                FROM Utenti
+                ORDER BY Cognome, Nome";
 
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand(query, conn);
-
-            try
-            {
-                await conn.OpenAsync();
-                using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    utenti.Add(MapFromReader(reader));
-                }
-                return utenti;
-            }
-            catch (SqlException ex)
-            {
-                throw new DAOException("Error retrieving users", ex);
-            }
+            return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
         }
 
         public async Task<Utente?> GetByIdAsync(int id)
@@ -39,27 +24,50 @@ namespace InDaCompany.Data.Implementations
                 SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
                 FROM Utenti 
                 WHERE ID = @ID";
-            var parameters = new[] { new SqlParameter("@ID", id) };
 
+            var parameters = new[] { new SqlParameter("@ID", id) };
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
+        public async Task<Utente?> GetByEmailAsync(string email)
+        {
+            const string query = @"
+                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
+                FROM Utenti 
+                WHERE Email = @Email";
+
+            var parameters = new[] { new SqlParameter("@Email", email) };
+            return await ExecuteQuerySingleAsync(query, parameters);
+        }
+
+        public async Task<bool> IsEmailUniqueAsync(string email)
+        {
+            const string query = "SELECT 1 FROM Utenti WHERE Email = @Email";
+            var parameters = new[] { new SqlParameter("@Email", email) };
+            var exists = await ExistsAsync(query, parameters);
+            return !exists;
+        }
         public async Task<int> InsertAsync(Utente entity)
         {
             const string query = @"
-                INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team) 
-                VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team);
+                INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione) 
+                VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @DataCreazione);
                 SELECT SCOPE_IDENTITY();";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@Nome", entity.Nome),
+                new SqlParameter("@Cognome", entity.Cognome),
+                new SqlParameter("@Email", entity.Email),
+                new SqlParameter("@PasswordHash", entity.PasswordHash),
+                new SqlParameter("@Ruolo", entity.Ruolo),
+                new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
+                new SqlParameter("@DataCreazione", DateTime.Now)
+            };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@Nome", entity.Nome);
-            cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
-            cmd.Parameters.AddWithValue("@Email", entity.Email);
-            cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
-            cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
-            cmd.Parameters.AddWithValue("@Team", (object?)entity.Team ?? DBNull.Value);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
@@ -67,9 +75,13 @@ namespace InDaCompany.Data.Implementations
                 var result = await cmd.ExecuteScalarAsync();
                 return Convert.ToInt32(result);
             }
+            catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            {
+                throw new DAOException("Email già registrata nel sistema", ex);
+            }
             catch (SqlException ex)
             {
-                throw new DAOException("Error inserting user", ex);
+                throw new DAOException("Errore durante l'inserimento dell'utente", ex);
             }
         }
 
@@ -80,49 +92,92 @@ namespace InDaCompany.Data.Implementations
                 SET Nome = @Nome,
                     Cognome = @Cognome,
                     Email = @Email,
-                    PasswordHash = @PasswordHash,
                     Ruolo = @Ruolo,
                     Team = @Team
                 WHERE ID = @ID";
 
+            var parameters = new[]
+            {
+                new SqlParameter("@ID", entity.ID),
+                new SqlParameter("@Nome", entity.Nome),
+                new SqlParameter("@Cognome", entity.Cognome),
+                new SqlParameter("@Email", entity.Email),
+                new SqlParameter("@Ruolo", entity.Ruolo),
+                new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value)
+            };
+
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@ID", entity.ID);
-            cmd.Parameters.AddWithValue("@Nome", entity.Nome);
-            cmd.Parameters.AddWithValue("@Cognome", entity.Cognome);
-            cmd.Parameters.AddWithValue("@Email", entity.Email);
-            cmd.Parameters.AddWithValue("@PasswordHash", entity.PasswordHash);
-            cmd.Parameters.AddWithValue("@Ruolo", entity.Ruolo);
-            cmd.Parameters.AddWithValue("@Team", (object?)entity.Team ?? DBNull.Value);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
                 await conn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                if (rowsAffected == 0)
+                {
+                    throw new DAOException($"Nessun utente trovato con ID {entity.ID}");
+                }
+            }
+            catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            {
+                throw new DAOException("Email già registrata nel sistema", ex);
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error updating user {entity.ID}", ex);
+                throw new DAOException($"Errore durante l'aggiornamento dell'utente {entity.ID}", ex);
+            }
+        }
+        public async Task<bool> ChangePasswordAsync(int userId, string newPasswordHash)
+        {
+            const string query = @"
+                UPDATE Utenti 
+                SET PasswordHash = @PasswordHash
+                WHERE ID = @ID";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@ID", userId),
+                new SqlParameter("@PasswordHash", newPasswordHash)
+            };
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddRange(parameters);
+
+            try
+            {
+                await conn.OpenAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                return rowsAffected > 0;
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Errore durante il cambio password dell'utente {userId}", ex);
             }
         }
 
         public async Task DeleteAsync(int id)
         {
             const string query = "DELETE FROM Utenti WHERE ID = @ID";
+            var parameters = new[] { new SqlParameter("@ID", id) };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-            cmd.Parameters.AddWithValue("@ID", id);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
                 await conn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                if (rowsAffected == 0)
+                {
+                    throw new DAOException($"Nessun utente trovato con ID {id}");
+                }
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error deleting user {id}", ex);
+                throw new DAOException($"Errore durante l'eliminazione dell'utente {id}", ex);
             }
         }
 
@@ -130,8 +185,30 @@ namespace InDaCompany.Data.Implementations
         {
             const string query = "SELECT 1 FROM Utenti WHERE ID = @ID";
             var parameters = new[] { new SqlParameter("@ID", id) };
-
             return await ExistsAsync(query, parameters);
+        }
+
+        public async Task<Utente?> AuthenticateAsync(string email, string password)
+        {
+            const string query = @"
+                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione
+                FROM Utenti 
+                WHERE Email = @Email AND PasswordHash = @Password";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@Email", email),
+                new SqlParameter("@Password", password)
+            };
+
+            try
+            {
+                return await ExecuteQuerySingleAsync(query, parameters);
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Errore durante l'autenticazione", ex);
+            }
         }
 
         protected override Utente MapFromReader(SqlDataReader reader)
@@ -149,27 +226,6 @@ namespace InDaCompany.Data.Implementations
                     : reader.GetString(reader.GetOrdinal("Team")),
                 DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
             };
-        }
-        //todo: update with a real password hashing - AS IS password is just plain text
-        //todo: update with async method
-        public Utente Authenticate(string username, string password) {
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand("SELECT Id, Email, PasswordHash, Ruolo FROM Utenti WHERE Email = @Username AND PasswordHash = @Password", conn);
-            cmd.Parameters.AddWithValue("@Username", username);
-            cmd.Parameters.AddWithValue("@Password", password);
-            conn.Open();
-            using var reader = cmd.ExecuteReader();
-
-            if (reader.Read()) {
-                return new Utente {
-                    ID = reader.GetInt32(0),
-                    Email = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    Ruolo = reader.GetString(3)
-                };
-            }
-            return null;
-
         }
     }
 }

@@ -2,10 +2,15 @@
 
 namespace InDaCompany.Data.Implementations
 {
-    public abstract class DAOBase<T>(string connectionString)
+    public abstract class DAOBase<T> where T : class
     {
-        protected readonly string _connectionString = connectionString ??
+        protected readonly string _connectionString;
+
+        protected DAOBase(string connectionString)
+        {
+            _connectionString = connectionString ??
                 throw new ArgumentNullException(nameof(connectionString));
+        }
 
         protected SqlConnection CreateConnection()
         {
@@ -16,20 +21,17 @@ namespace InDaCompany.Data.Implementations
         {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-            if (parameters != null)
-            {
-                cmd.Parameters.AddRange(parameters);
-            }
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
                 await conn.OpenAsync();
                 var result = await cmd.ExecuteScalarAsync();
-                return result != null;
+                return result != null && !Convert.IsDBNull(result);
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Database error checking existence: {ex.Message}", ex);
+                throw new DAOException($"Errore database durante la verifica: {ex.Message}", ex);
             }
         }
 
@@ -37,10 +39,7 @@ namespace InDaCompany.Data.Implementations
         {
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-            if (parameters != null)
-            {
-                cmd.Parameters.AddRange(parameters);
-            }
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
@@ -50,15 +49,37 @@ namespace InDaCompany.Data.Implementations
                 {
                     return MapFromReader(reader);
                 }
-                return default;
+                return null;
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Database error executing query: {ex.Message}", ex);
+                throw new DAOException($"Errore database durante l'esecuzione della query: {ex.Message}", ex);
+            }
+        }
+
+        protected async Task<List<T>> ExecuteQueryListAsync(string query, SqlParameter[] parameters)
+        {
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddRange(parameters);
+
+            try
+            {
+                await conn.OpenAsync();
+                using var reader = await cmd.ExecuteReaderAsync();
+                var results = new List<T>();
+                while (await reader.ReadAsync())
+                {
+                    results.Add(MapFromReader(reader));
+                }
+                return results;
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Errore database durante l'esecuzione della query: {ex.Message}", ex);
             }
         }
 
         protected abstract T MapFromReader(SqlDataReader reader);
     }
 }
-

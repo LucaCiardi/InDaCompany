@@ -4,33 +4,18 @@ using Microsoft.Data.SqlClient;
 
 namespace InDaCompany.Data.Implementations
 {
-    public class DAOMessaggiThread(string connectionString) : DAOBase<MessaggioThread>(connectionString), IDAOMessaggiThread
+    public class DAOMessaggiThread : DAOBase<MessaggioThread>, IDAOMessaggiThread
     {
+        public DAOMessaggiThread(string connectionString) : base(connectionString) { }
+
         public async Task<List<MessaggioThread>> GetAllAsync()
         {
             const string query = @"
                 SELECT ID, ThreadID, AutoreID, Testo, DataCreazione 
-                FROM MessaggiThread";
+                FROM MessaggiThread
+                ORDER BY DataCreazione DESC";
 
-            var messaggi = new List<MessaggioThread>();
-
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand(query, conn);
-
-            try
-            {
-                await conn.OpenAsync();
-                using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    messaggi.Add(MapFromReader(reader));
-                }
-                return messaggi;
-            }
-            catch (SqlException ex)
-            {
-                throw new DAOException("Error retrieving messages", ex);
-            }
+            return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
         }
 
         public async Task<MessaggioThread?> GetByIdAsync(int id)
@@ -44,19 +29,47 @@ namespace InDaCompany.Data.Implementations
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
-        public async Task<int> InsertAsync(MessaggioThread entity, int threadID, int autoreID)
+        public async Task<List<MessaggioThread>> GetMessagesByThreadAsync(int threadID)
         {
             const string query = @"
-                INSERT INTO MessaggiThread (ThreadID, AutoreID, Testo) 
-                VALUES (@ThreadID, @AutoreID, @Testo);
+                SELECT ID, ThreadID, AutoreID, Testo, DataCreazione 
+                FROM MessaggiThread 
+                WHERE ThreadID = @ThreadID
+                ORDER BY DataCreazione ASC";
+
+            var parameters = new[] { new SqlParameter("@ThreadID", threadID) };
+            return await ExecuteQueryListAsync(query, parameters);
+        }
+
+        public async Task<List<MessaggioThread>> GetMessagesByAuthorAsync(int authorID)
+        {
+            const string query = @"
+                SELECT ID, ThreadID, AutoreID, Testo, DataCreazione 
+                FROM MessaggiThread 
+                WHERE AutoreID = @AutoreID
+                ORDER BY DataCreazione DESC";
+
+            var parameters = new[] { new SqlParameter("@AutoreID", authorID) };
+            return await ExecuteQueryListAsync(query, parameters);
+        }
+        public async Task<int> InsertAsync(MessaggioThread entity)
+        {
+            const string query = @"
+                INSERT INTO MessaggiThread (ThreadID, AutoreID, Testo, DataCreazione) 
+                VALUES (@ThreadID, @AutoreID, @Testo, @DataCreazione);
                 SELECT SCOPE_IDENTITY();";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@ThreadID", entity.ThreadID),
+                new SqlParameter("@AutoreID", entity.AutoreID),
+                new SqlParameter("@Testo", entity.Testo),
+                new SqlParameter("@DataCreazione", DateTime.Now)
+            };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@ThreadID", threadID);
-            cmd.Parameters.AddWithValue("@AutoreID", autoreID);
-            cmd.Parameters.AddWithValue("@Testo", entity.Testo);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
@@ -66,7 +79,7 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException("Error inserting message", ex);
+                throw new DAOException("Errore durante l'inserimento del messaggio", ex);
             }
         }
 
@@ -79,42 +92,53 @@ namespace InDaCompany.Data.Implementations
                     Testo = @Testo
                 WHERE ID = @ID";
 
+            var parameters = new[]
+            {
+                new SqlParameter("@ID", entity.ID),
+                new SqlParameter("@ThreadID", entity.ThreadID),
+                new SqlParameter("@AutoreID", entity.AutoreID),
+                new SqlParameter("@Testo", entity.Testo)
+            };
+
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@ID", entity.ID);
-            cmd.Parameters.AddWithValue("@ThreadID", entity.ThreadID);
-            cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
-            cmd.Parameters.AddWithValue("@Testo", entity.Testo);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
                 await conn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                if (rowsAffected == 0)
+                {
+                    throw new DAOException($"Nessun messaggio trovato con ID {entity.ID}");
+                }
             }
             catch (SqlException ex)
             {
-                throw new DAOException("Error updating message", ex);
+                throw new DAOException("Errore durante l'aggiornamento del messaggio", ex);
             }
         }
-
         public async Task DeleteAsync(int id)
         {
             const string query = "DELETE FROM MessaggiThread WHERE ID = @ID";
+            var parameters = new[] { new SqlParameter("@ID", id) };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@ID", id);
+            cmd.Parameters.AddRange(parameters);
 
             try
             {
                 await conn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                if (rowsAffected == 0)
+                {
+                    throw new DAOException($"Nessun messaggio trovato con ID {id}");
+                }
             }
             catch (SqlException ex)
             {
-                throw new DAOException("Error deleting message", ex);
+                throw new DAOException($"Errore durante l'eliminazione del messaggio {id}", ex);
             }
         }
 
@@ -122,7 +146,6 @@ namespace InDaCompany.Data.Implementations
         {
             const string query = "SELECT 1 FROM MessaggiThread WHERE ID = @ID";
             var parameters = new[] { new SqlParameter("@ID", id) };
-
             return await ExistsAsync(query, parameters);
         }
 
@@ -136,31 +159,6 @@ namespace InDaCompany.Data.Implementations
                 Testo = reader.GetString(reader.GetOrdinal("Testo")),
                 DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
             };
-        }
-        public async Task<int> InsertAsync(MessaggioThread entity)
-        {
-            const string query = @"
-                INSERT INTO MessaggiThread (ThreadID, AutoreID, Testo) 
-                VALUES (@ThreadID, @AutoreID, @Testo);
-                SELECT SCOPE_IDENTITY();";
-
-            using var conn = CreateConnection();
-            using var cmd = new SqlCommand(query, conn);
-
-            cmd.Parameters.AddWithValue("@ThreadID", entity.ThreadID);
-            cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
-            cmd.Parameters.AddWithValue("@Testo", entity.Testo);
-
-            try
-            {
-                await conn.OpenAsync();
-                var result = await cmd.ExecuteScalarAsync();
-                return Convert.ToInt32(result);
-            }
-            catch (SqlException ex)
-            {
-                throw new DAOException("Error inserting message", ex);
-            }
         }
     }
 }

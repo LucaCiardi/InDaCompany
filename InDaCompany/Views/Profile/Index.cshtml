@@ -1,265 +1,112 @@
 ﻿@model ProfileViewModel
-
 @{
     ViewData["Title"] = "Profilo";
 }
 
 <div class="container mt-4">
-     <!-- Header del profilo -->
+    <!-- Header del profilo -->
     <div class="profile-header d-flex align-items-center">
         <img src="" alt="Foto Profilo" class="profile-photo me-3" />
         <div>
-            <h3 class="mb-0">@Model.Utente.Nome @Model.Utente.Cognome</h3>
-            @if (!string.IsNullOrEmpty(Model.Utente.Team)) {
-            <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy") • @Model.Utente.Team</p>
-            } else {
-                <p class="text-muted">Joined on @Model.Utente.DataCreazione.ToString("MMM"), @Model.Utente.DataCreazione.ToString("yyyy")</p>
-            }
+            <h3 class="mb-0">@Model.Utente?.Nome @Model.Utente?.Cognome</h3>
+            <p class="text-muted">
+                Iscritto dal @Model.Utente?.DataCreazione.ToString("MMMM yyyy", new System.Globalization.CultureInfo("it-IT"))
+                @if (!string.IsNullOrEmpty(Model.Utente?.Team))
+                {
+                    <span>• @Model.Utente.Team</span>
+                }
+            </p>
         </div>
     </div>
 
-    <!-- Navbar in stile Reddit -->
+    <!-- Navbar -->
     <ul class="nav nav-pills mt-3 mb-4">
         <li class="nav-item">
-            <a class="nav-link active" href="@Url.Action("Index", "Post")" id="nav-custom">Posts</a> <!-- da eliminare -->
+            <a class="nav-link active" href="#threads" id="nav-custom">Thread</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="@Url.Action("Index", "MessaggiThread")" id="nav-custom">Comments</a>
+            <a class="nav-link" href="#comments" id="nav-custom">Commenti</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/upvoted" id="nav-custom">Liked</a>
+            <a class="nav-link" href="#liked" id="nav-custom">Mi piace</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/ticket" id="nav-custom">Ticket</a>
+            <a class="nav-link" href="#tickets" id="nav-custom">Ticket</a>
         </li>
     </ul>
 
-    <!-- Contenuto delle Sezioni -->
+    <!-- Contenuto -->
     <div class="row mt-4">
-        <!-- Sezione Post -->
+        <!-- Sezione principale -->
         <div class="col-md-8">
-            <div id="content-posts" class="content-section">
-                <!-- Post Singolo -->
-                @foreach (var thread in Model.ThreadForums) {
-                <div class="post-card mb-3 p-3">
-
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Created on @thread.DataCreazione.ToString("d")</span>
-                    </div>
-                    <p class="text-muted">@thread.Testo</p>
-                    <img src="" class="img-fluid rounded" alt="Immagine Post">
-                    <div class="d-flex justify-content-start mt-3">
-                        <button class="btn btn-outline-primary" id="button">
-                            <span class="material-icons">thumb_up</span> Mi piace
-                        </button>
-                        <button class="btn btn-outline-secondary" id="button">
-                            <span class="material-icons">comment</span> Commenta
-                        </button>
-                    </div>
-                </div>
+            <div id="content-threads" class="content-section">
+                @if (Model.ThreadForums?.Any() == true)
+                {
+                    foreach (var thread in Model.ThreadForums)
+                    {
+                        <div class="post-card mb-3 p-3">
+                            <div class="d-flex justify-content-between">
+                                <h5>@thread.Titolo</h5>
+                                <span class="text-muted">
+                                    @thread.DataCreazione.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            </div>
+                            <p class="mt-2">@thread.Testo</p>
+                            <img src="" class="img-fluid rounded" alt="Immagine Thread">
+                            <div class="d-flex justify-content-start mt-3">
+                                <button class="btn btn-outline-primary me-2" id="button">
+                                    <i class="ti ti-thumb-up"></i> Mi piace
+                                </button>
+                                <button class="btn btn-outline-secondary" id="button">
+                                    <i class="ti ti-message"></i> Commenta
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-info">Nessun thread creato.</div>
                 }
             </div>
 
-            <div id="content-comments" class="content-section d-none">
-                <!-- Post Singolo -->
-                @foreach (var thread in Model.ThreadForums) {
-                <div class="post-card mb-3 p-3">
-
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">@thread.Titolo • @thread.DataCreazione.ToString("d")</span>
-                    </div>
-                    <p class="text-muted">@thread.Testo</p>
-                    <img src="" class="img-fluid rounded" alt="Immagine Post">
-                    <div class="d-flex justify-content-start mt-3">
-                        <button class="btn btn-outline-primary" id="button">
-                            <span class="material-icons">thumb_up</span> Mi piace
-                        </button>
-                        <button class="btn btn-outline-secondary" id="button">
-                            <span class="material-icons">comment</span> Commenta
-                        </button>
-                    </div>
-                </div>
-                }
-            </div>
-            
-
-            <div id="content-upvoted" class="content-section d-none">
-                <p>Qui verranno mostrati i post upvotati dall'utente.</p>
-            </div>
-
-            <div id="content-saved" class="content-section d-none">
-                <p>Qui verranno mostrati i post salvati dall'utente.</p>
-            </div>
+            <!-- Other sections would go here -->
         </div>
 
-
-        <!-- Sidebar Destra -->
+        <!-- Sidebar -->
         <div class="col-md-4">
-        
-            <a asp-action="Create" asp-controller="Ticket" class="btn btn-lg pr-4" id="btn-indigo">
-                <span class="material-icons">confirmation_number</span> Apertura ticket
-            </a>
-            <a asp-action="Index" asp-controller="Forum" class="btn btn-lg" id="btn-indigo">
-                <span class="material-icons">forum</span> Forum
-            </a>
-        
+            <div class="d-grid gap-2">
+                <a asp-controller="Ticket" asp-action="Create" class="btn btn-lg" id="btn-indigo">
+                    <i class="ti ti-ticket me-2"></i>Apri Ticket
+                </a>
+                <a asp-controller="Forum" asp-action="Index" class="btn btn-lg" id="btn-indigo">
+                    <i class="ti ti-messages me-2"></i>Forum
+                </a>
+            </div>
 
-        <!-- Comunità Iscritte -->
-        <div class="sidebar-card p-2 mt-3">
-            <h5><span class="material-icons" id="=group-icon">groups</span> Comunità Iscritte</h5>
-            <ul class="list-unstyled">
-                @foreach (var forum in Model.Forums) {
-                <li><a href="#">r/@forum.Nome</a></li>
-                }
-                <li><a href="#">r/meme</a></li>
-            </ul>
+            <!-- Forum iscritti -->
+            <div class="sidebar-card p-3 mt-3">
+                <h5 class="mb-3">
+                    <i class="ti ti-users me-2"></i>Forum iscritti
+                </h5>
+                <ul class="list-unstyled mb-0">
+                    @if (Model.Forums?.Any() == true)
+                    {
+                        foreach (var forum in Model.Forums)
+                        {
+                            <li class="mb-2">
+                                <a asp-controller="Forum" asp-action="Details" asp-route-id="@forum.ID">
+                                    @forum.Nome
+                                </a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="text-muted">Nessun forum seguito</li>
+                    }
+                </ul>
+            </div>
         </div>
     </div>
 </div>
-
-<!--
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Ticket</h2>
-            <div class="space-y-4">
-                @foreach (var ticket in (ViewBag.RecentTickets as List<Ticket>) ?? new List<Ticket>())
-                {
-                    <div class="border-l-4 border-indigo-500 pl-4 py-2">
-                        <h3 class="font-semibold">@ticket.Descrizione</h3>
-                        <div class="flex justify-between items-center text-sm text-gray-600">
-                            <span>Stato: @ticket.Stato</span>
-                            <span>@ticket.DataApertura.ToString("dd/MM/yyyy")</span>
-                        </div>
-                    </div>
-                }
-                @if (!(ViewBag.RecentTickets as List<Ticket>)?.Any() ?? true)
-                {
-                    <p class="text-gray-500 italic">Nessun ticket creato</p>
-                }
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-indigo-700 mb-4">I Miei Post</h2>
-            <div class="space-y-4">
-                @foreach (var post in (ViewBag.RecentPosts as List<Post>) ?? new List<Post>())
-                {
-                    <div class="border-l-4 border-indigo-500 pl-4 py-2">
-                        <p class="text-sm text-gray-600">@post.DataCreazione.ToString("dd/MM/yyyy")</p>
-                        <p class="mt-1">@post.Testo</p>
-                    </div>
-                }
-                @if (!(ViewBag.RecentPosts as List<Post>)?.Any() ?? true)
-                {
-                    <p class="text-gray-500 italic">Nessun post creato</p>
-                }
-            </div>
-        </div>
-    </div>-->
-
-<style>
-        /* Header del profilo */
-        .profile-header {
-            border-bottom: 1px solid #dee2e6;
-            padding: 20px;
-        }
-
-        /* Immagine profilo circolare */
-        .profile-photo {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-        }
-
-        .btn-outline-primary {
-            color: indigo;
-            border-color: indigo;
-        }
-        .btn-outline-primary:hover {
-            color: #fff;
-            background-color: indigo;
-            border-color: indigo;
-        }
-        
-        #btn-indigo {
-            color: #fff;
-            background-color: indigo;
-            border-color: indigo;
-        }
-
-    #btn-indigo:hover {
-        color: #fff;
-        background-color: rgb(141, 65, 195);
-        border-color: indigo;
-    }
-        .nav-pills #nav-custom.active,
-        .nav-pills .show > #nav-custom {
-            color: #fff;
-            background-color: indigo;
-        }
-
-        #nav-custom {
-            color: indigo;
-        }
-
-        #nav-custom:hover, #nav-custom:focus {
-            color: rgb(141, 65, 195);
-        }
-
-        a {
-            color: indigo;
-        }
-
-        a:hover {
-            color: rgb(141, 65, 195);
-        }
-
-        /* Stile per i post */
-        .post-card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            transition: box-shadow 0.3s;
-        }
-        .post-card:hover {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Stile per la sidebar */
-        .sidebar-card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-        }
-
-        #button {
-            margin-right: 0.5rem !important; 
-        }
-
-        #group-icon {
-            margin-top: 0.25rem !important;
-        }
-</style>
-
-
-<script>
-    const navLinks = document.querySelectorAll("#nav-custom");
-    const content = document.querySelectorAll(".content-section");
-
-    // Funzione per gestire il cambio di sezione
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(event) {
-            event.preventDefault();  // Previene il ricaricamento della pagina
-            
-            // Rimuove la classe "active" da tutti i link
-            navLinks.forEach(nav => nav.classList.remove('active'));
-            // Aggiunge la classe "active" al link cliccato
-            this.classList.add('active');
-
-            // Nasconde tutte le sezioni
-            contentSections.forEach(section => section.classList.add('d-none'));
-
-            // Mostra la sezione corrispondente
-            const targetId = this.getAttribute('href').substring(1);
-            document.getElementById(`content-${targetId}`).classList.remove('d-none');
-        });
-    });
-</script>
