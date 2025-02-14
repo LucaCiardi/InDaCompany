@@ -9,8 +9,36 @@ namespace InDaCompany.Data.Implementations
         public async Task<List<ThreadForum>> GetAllAsync()
         {
             const string query = @"
-                SELECT ID, Titolo, ForumID, AutoreID, DataCreazione 
+                SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
                 FROM ThreadForum";
+            var threads = new List<ThreadForum>();
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+
+            try
+            {
+                await conn.OpenAsync();
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    threads.Add(MapFromReader(reader));
+                }
+                return threads;
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Error retrieving threads", ex);
+            }
+        }
+
+        public async Task<List<ThreadForum>> GetHomeThreadsAsync()
+        {
+            const string query = @"
+                SELECT ThreadForum.ID, ThreadForum.Titolo, ThreadForum.Testo, ThreadForum.ForumID, ThreadForum.AutoreID, ThreadForum.DataCreazione 
+                FROM ThreadForum
+                LEFT JOIN Forum ON ThreadForum.ForumID = Forum.ID
+                WHERE Forum.Nome = 'Generale'";
             var threads = new List<ThreadForum>();
 
             using var conn = CreateConnection();
@@ -35,7 +63,7 @@ namespace InDaCompany.Data.Implementations
         public async Task<ThreadForum?> GetByIdAsync(int id)
         {
             const string query = @"
-                SELECT ID, Titolo, ForumID, AutoreID, DataCreazione 
+                SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
                 FROM ThreadForum 
                 WHERE ID = @ID";
             var parameters = new[] { new SqlParameter("@ID", id) };
@@ -51,7 +79,7 @@ namespace InDaCompany.Data.Implementations
         public async Task<int> InsertWithIdsAsync(ThreadForum entity, int forumID, int autoreID)
         {
             const string query = @"
-                INSERT INTO ThreadForum (Titolo, ForumID, AutoreID) 
+                INSERT INTO ThreadForum (Titolo, Testo, ForumID, AutoreID) 
                 VALUES (@Titolo, @ForumID, @AutoreID);
                 SELECT SCOPE_IDENTITY();";
 
@@ -78,7 +106,8 @@ namespace InDaCompany.Data.Implementations
         {
             const string query = @"
                 UPDATE ThreadForum
-                SET Titolo = @Titolo, 
+                SET Titolo = @Titolo,
+                    Testo = @Testo,
                     ForumID = @ForumID, 
                     AutoreID = @AutoreID
                 WHERE ID = @ID";
@@ -88,6 +117,7 @@ namespace InDaCompany.Data.Implementations
 
             cmd.Parameters.AddWithValue("@ID", entity.ID);
             cmd.Parameters.AddWithValue("@Titolo", entity.Titolo);
+            cmd.Parameters.AddWithValue("@Testo", entity.Testo);
             cmd.Parameters.AddWithValue("@ForumID", entity.ForumID);
             cmd.Parameters.AddWithValue("@AutoreID", entity.AutoreID);
 
@@ -135,6 +165,7 @@ namespace InDaCompany.Data.Implementations
             {
                 ID = reader.GetInt32(reader.GetOrdinal("ID")),
                 Titolo = reader.GetString(reader.GetOrdinal("Titolo")),
+                Testo = reader.GetString(reader.GetOrdinal("Testo")),
                 ForumID = reader.GetInt32(reader.GetOrdinal("ForumID")),
                 AutoreID = reader.GetInt32(reader.GetOrdinal("AutoreID")),
                 DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))

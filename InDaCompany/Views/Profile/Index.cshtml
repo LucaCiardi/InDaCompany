@@ -109,9 +109,9 @@
             <h5><span class="material-icons" id="=group-icon">groups</span> Comunità Iscritte</h5>
             <ul class="list-unstyled">
                 @foreach (var forum in Model.Forums) {
-                <li><a href="#">r/@forum.Nome</a></li>
+                <li><a href="#" id="forum-link">r/@forum.Nome</a></li>
                 }
-                <li><a href="#">r/meme</a></li>
+                <li><a href="#" id="forum-link">r/meme</a></li>
             </ul>
         </div>
     </div>
@@ -187,11 +187,11 @@
             border-color: indigo;
         }
 
-    #btn-indigo:hover {
-        color: #fff;
-        background-color: rgb(141, 65, 195);
-        border-color: indigo;
-    }
+        #btn-indigo:hover {
+            color: #fff;
+            background-color: rgb(141, 65, 195);
+            border-color: indigo;
+        }
         .nav-pills #nav-custom.active,
         .nav-pills .show > #nav-custom {
             color: #fff;
@@ -206,11 +206,11 @@
             color: rgb(141, 65, 195);
         }
 
-        a {
+        #forum-link {
             color: indigo;
         }
 
-        a:hover {
+        #forum-link:hover {
             color: rgb(141, 65, 195);
         }
 

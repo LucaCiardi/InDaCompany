@@ -5,5 +5,7 @@ namespace InDaCompany.Data.Interfaces
     public interface IDAOThreadForum : IDAOBase<ThreadForum>
     {
         Task<int> InsertWithIdsAsync(ThreadForum entity, int forumID, int autoreID);
+
+         Task<List<ThreadForum>> GetHomeThreadsAsync();
     }
 }
