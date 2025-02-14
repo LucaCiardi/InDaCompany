@@ -3,40 +3,43 @@ using InDaCompany.Models;
 using InDaCompany.Data.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace InDaCompany.Controllers
 {
     [Authorize]
     public class HomeController : BaseController
     {
-        private readonly IDAOPost _daoPost;
+        private readonly IDAOForum _daoForum;
         private readonly IDAOThreadForum _daoThreadForum;
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(
             IConfiguration configuration,
             ILogger<HomeController> logger,
-            IDAOPost daoPost,
+            IDAOForum daoForum,
             IDAOThreadForum daoThreadForum)
             : base(configuration, logger)
         {
-            _daoPost = daoPost;
+            _daoForum = daoForum;
             _daoThreadForum = daoThreadForum;
             _logger = logger;
         }
 
         public async Task<IActionResult> Index()
-        {
+        {   
+            var mailUser = ViewBag.User == null ? "laura.bianchi@azienda.com" : "laura.bianchi@azienda.com";
             try
             {
                 _logger.LogInformation("Accessing home page");
 
                 //var posts = await _daoPost.GetAllAsync();
-                var threads = await _daoThreadForum.GetAllAsync();
+                var threads = await _daoThreadForum.GetHomeThreadsAsync();
+                var forums = await _daoForum.GetForumByUser(mailUser);
 
                 var model = new HomeViewModel
                 {
-                    
+                    Forums = forums ?? new List<Forum>(),
                     Threads = threads ?? new List<ThreadForum>()
                 };
 

@@ -15,17 +15,17 @@
     </div>
 
     <div class="row">
-        <!-- Colonna dei Post -->
+        <!-- Colonna dei Thread -->
         <div class="col-8">
             @if (Model.Threads != null && Model.Threads.Any())
             {
-                @foreach (var post in Model.Threads)
+                @foreach (var thread in Model.Threads)
                 {
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Post #@post.ID</h5>
-                            <p class="card-text">@post.Testo</p>
-                            <small class="text-muted">@post.DataCreazione.ToString("g")</small>
+                            <h5 class="card-title"><small class="text-muted">@thread.DataCreazione.ToString("d")</small> • @thread.Titolo</h5> 
+                            <p class="card-text">@thread.Testo</p>
+                            
                         </div>
                         <div class="p-3">
                             <form method="post">
@@ -45,7 +45,7 @@
             }
         </div>
 
-        <!-- Colonna dei Thread -->
+        <!-- Colonna dei Forum -->
         <div class="col-4">
             <div class="text-center mb-4">
                 <h1 class="display-4"><i class="bi bi-shop me-2"></i>Forum</h1>
@@ -54,11 +54,11 @@
                 </p>
             </div>
             <ul class="list-group">
-                @if (Model.Threads != null && Model.Threads.Any())
+                @if (Model.Forums != null && Model.Forums.Any())
                 {
-                    @foreach (var thread in Model.Threads)
+                    @foreach (var forum in Model.Forums)
                     {
-                        <li class="list-group-item">@thread.Titolo</li>
+                        <li class="list-group-item"><a href="#" id="forum-link">@forum.Nome</a></li>
                     }
                 }
                 else
@@ -81,6 +81,14 @@
         color: #fff;
         background-color: rgb(141, 65, 195);
         border-color: indigo;
+    }
+
+    #forum-link {
+        color: indigo;
+    }
+
+    #forum-link:hover {
+        color: rgb(141, 65, 195);
     }
 
 </style>
