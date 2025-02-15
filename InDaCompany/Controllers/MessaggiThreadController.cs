@@ -1,4 +1,5 @@
-﻿using InDaCompany.Data.Implementations;
+﻿using System.Threading;
+using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -10,14 +11,17 @@ namespace InDaCompany.Controllers
     public class MessaggiThreadController : BaseController
     {
         private readonly IDAOMessaggiThread _daoMessaggiThread;
+        private readonly IDAOThreadForum _daoThreadForum;
         private readonly ILogger<MessaggiThreadController> _logger;
 
         public MessaggiThreadController(
-            ILogger<MessaggiThreadController> logger,
-            IDAOMessaggiThread daoMessaggiThread)
-            : base(logger)
+     ILogger<MessaggiThreadController> logger,
+     IDAOMessaggiThread daoMessaggiThread,
+     IDAOThreadForum daoThreadForum)
+     : base(logger)
         {
             _daoMessaggiThread = daoMessaggiThread;
+            _daoThreadForum = daoThreadForum;
             _logger = logger;
         }
 
@@ -51,18 +55,29 @@ namespace InDaCompany.Controllers
                     messaggio.AutoreID = GetCurrentUserId();
                     await _daoMessaggiThread.InsertAsync(messaggio);
 
-                    _logger.LogInformation("Messaggio creato con successo per il thread {ThreadId}", messaggio.ThreadID);
-                    TempData["Success"] = "Messaggio creato con successo!";
-                    return RedirectToAction(nameof(Index));
+                    // Get the thread to find its forum
+                    var thread = await _daoThreadForum.GetByIdAsync(messaggio.ThreadID);
+                    if (thread == null)
+                    {
+                        return NotFound();
+                    }
+
+                    _logger.LogInformation("Messaggio creato con successo nel thread {ThreadId}", messaggio.ThreadID);
+                    TempData["Success"] = "Commento aggiunto con successo";
+
+                    // Redirect back to the forum where the comment was made
+                    return RedirectToAction("Index", "Forum");  // Or if you have a Details action: return RedirectToAction("Details", "Forum", new { id = thread.ForumID });
                 }
-                catch (DAOException ex)
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Errore durante la creazione del messaggio");
-                    TempData["Error"] = "Errore durante la creazione del messaggio";
-                    return View(messaggio);
+                    TempData["Error"] = "Errore durante l'invio del commento";
+                    return RedirectToAction("Index", "Forum");
                 }
             }
-            return View(messaggio);
+
+            TempData["Error"] = "Dati non validi";
+            return RedirectToAction("Index", "Forum");
         }
 
         [HttpGet]
@@ -111,14 +126,12 @@ namespace InDaCompany.Controllers
                         return NotFound();
                     }
 
-                    // Verify that the current user is the author
                     if (original.AutoreID != GetCurrentUserId())
                     {
                         _logger.LogWarning("Tentativo non autorizzato di modificare il messaggio: {Id}", id);
                         return Forbid();
                     }
 
-                    // Preserve original values
                     messaggio.DataCreazione = original.DataCreazione;
                     messaggio.AutoreID = original.AutoreID;
 
@@ -148,7 +161,6 @@ namespace InDaCompany.Controllers
                     return NotFound();
                 }
 
-                // Verify that the current user is the author
                 if (messaggio.AutoreID != GetCurrentUserId())
                 {
                     _logger.LogWarning("Tentativo non autorizzato di eliminare il messaggio: {Id}", id);
@@ -176,7 +188,6 @@ namespace InDaCompany.Controllers
                     return NotFound();
                 }
 
-                // Verify that the current user is the author
                 if (messaggio.AutoreID != GetCurrentUserId())
                 {
                     _logger.LogWarning("Tentativo non autorizzato di eliminare il messaggio: {Id}", id);

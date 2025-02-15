@@ -55,6 +55,7 @@
                         <form asp-controller="MessaggiThread" asp-action="Create" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ThreadID" value="@thread.ID" />
+                            <input type="hidden" name="ForumID" value="@Model.Forums?.FirstOrDefault()?.ID" />
 
                             <div class="mb-2">
                                 <textarea name="Testo" class="form-control rounded"
