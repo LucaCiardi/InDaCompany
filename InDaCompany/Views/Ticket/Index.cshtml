@@ -7,13 +7,14 @@
 <div class="text-center mb-5">
     <h2 class="display-4 text-indigo">
         <i class="bi bi-ticket-detailed"></i> Ticket System
-        </h2>
+    </h2>
 </div>
 
 <div class="row-md">
     <form asp-action="Search" method="get" class="d-flex me-3 mb-3">
-        <input type="search" name="searchBar" class="form-control me-2 search-box" placeholder="Cerca..." aria-label="Cerca">
-        <button class="btn text-white" id="btn-indigo" type="submit">
+        <input type="search" name="searchBar" class="form-control me-2 search-box" 
+               placeholder="Cerca..." aria-label="Cerca">
+        <button class="btn btn-indigo" type="submit">
             <i class="bi bi-search"></i>
         </button>
     </form>
@@ -24,6 +25,7 @@
         <tr>
             <th>ID</th>
             <th>Utente</th>
+            <th>Titolo</th>
             <th>Descrizione</th>
             <th>Stato</th>
             <th>Data Apertura</th>
@@ -31,38 +33,72 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model) {
+        @foreach (var item in Model)
+        {
             <tr>
                 <td>@item.ID</td>
                 <td>@item.CreatoDaID</td>
+                <td>@item.Titolo</td>
                 <td>@item.Descrizione</td>
-                <td>@item.Stato</td>
-                <td>@item.DataApertura.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <span class="badge bg-@(item.Stato switch {
+                        "Aperto" => "danger",
+                        "In lavorazione" => "warning",
+                        "Chiuso" => "success",
+                        _ => "secondary"
+                    })">@item.Stato</span>
+                </td>
+                <td>@item.DataApertura.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
                         <i class="bi bi-pencil"></i> Modifica
                     </a>
-                    <a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-danger btn-sm">
+
+                    <a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
                         <i class="bi bi-trash"></i> Elimina
                     </a>
                 </td>
+
             </tr>
         }
     </tbody>
 </table>
 
+<!-- Modal di conferma eliminazione -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" 
+     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="testoDelModal" class="modal-body">
+                Sei sicuro di voler eliminare questo ticket?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="post" asp-action="DeleteConfirmed">
+                    <input type="hidden" name="id" id="deleteId">
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .text-indigo {
-        color:indigo;
+        color: indigo;
     }
 
-    #btn-indigo {
+    .btn-indigo {
         color: #fff;
         background-color: indigo;
         border-color: indigo;
     }
 
-    #btn-indigo:hover {
+    .btn-indigo:hover {
         color: #fff;
         background-color: rgb(141, 65, 195);
         border-color: indigo;
@@ -71,4 +107,48 @@
     #table-container {
         border: 1px solid indigo;
     }
+
+    .table th {
+        background-color: indigo;
+        color: white;
+    }
+
+    .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.7em;
+    }
+
+    #btn-indigo, .btn-indigo {
+        color: #fff;
+        background-color: indigo;
+        border-color: indigo;
+    }
+
+        #btn-indigo:hover, .btn-indigo:hover {
+            color: #fff;
+            background-color: rgb(141, 65, 195);
+            border-color: indigo;
+        }
+
 </style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.deleteButton');
+            const deleteIdInput = document.getElementById('deleteId');
+            const modalText = document.getElementById('testoDelModal');
+            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const id = this.getAttribute('data-id');
+                    modalText.textContent = 'Sei sicuro di voler eliminare il ticket #' + id + ' ?';
+                    deleteIdInput.value = id;
+                    modal.show();
+                });
+            });
+        });
+    </script>
+}
