@@ -4,49 +4,55 @@
     ViewData["Title"] = "Create Ticket";
 }
 
-<h1>Crea un nuovo Ticket d'assistenza</h1>
+<div class="container mt-4">
+    <h1 class="mb-4">Crea un nuovo Ticket d'assistenza</h1>
 
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
-            <div class="form-group">
-                <label asp-for="Titolo" class="control-label"></label>
-                <input asp-for="Titolo" class="form-control" />
-                <span asp-validation-for="Titolo" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Descrizione" class="control-label"></label>
-                <textarea asp-for="Descrizione" class="form-control" rows="3"/></textarea>
-                <span asp-validation-for="Descrizione" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <a asp-action="Create" class="btn btn-indigo" id="btn-indigo">
-                    <i class="bi bi-save me-2"></i> Crea
-                </a>
-                <a asp-action="Index" class="btn btn-indigo" id="btn-indigo">
-                    <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
-                </a>
-            </div>
-        </form>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Titolo" class="control-label">Titolo</label>
+                    <input asp-for="Titolo" class="form-control" required />
+                    <span asp-validation-for="Titolo" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Descrizione" class="control-label">Descrizione</label>
+                    <textarea asp-for="Descrizione" class="form-control" rows="3" required></textarea>
+                    <span asp-validation-for="Descrizione" class="text-danger"></span>
+                </div>
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-sm" id="btn-indigo">
+                        <i class="bi bi-save me-2"></i> Crea
+                    </button>
+                    <a asp-action="Index" class="btn btn-sm" id="btn-indigo">
+                        <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
     #btn-indigo {
         margin-top: 0.75rem;
-    }
-
-    #btn-indigo {
         color: #fff;
         background-color: indigo;
         border-color: indigo;
     }
 
-    #btn-indigo:hover {
-        color: #fff;
-        background-color: rgb(141, 65, 195);
-        border-color: indigo;
-    }
+        #btn-indigo:hover {
+            color: #fff;
+            background-color: rgb(141, 65, 195);
+            border-color: indigo;
+        }
 </style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
