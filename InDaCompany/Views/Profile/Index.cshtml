@@ -39,6 +39,7 @@
     <div class="row mt-4">
         <!-- Sezione principale -->
         <div class="col-md-8">
+            <!-- Sezione Thread -->
             <div id="content-threads" class="content-section">
                 @if (Model.ThreadForums?.Any() == true)
                 {
@@ -70,6 +71,65 @@
                 {
                     <div class="alert alert-info">
                         <i class="ti ti-info-circle me-2"></i>Nessun thread creato.
+                    </div>
+                }
+            </div>
+
+            <!-- Sezione Commenti -->
+            <div id="content-comments" class="content-section d-none">
+                @if (Model.Messages?.Any() == true)
+                {
+                    foreach (var message in Model.Messages)
+                    {
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <p class="mb-2">@message.Testo</p>
+                                <small class="text-muted">
+                                    @message.DataCreazione.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle me-2"></i>Nessun commento.
+                    </div>
+                }
+            </div>
+
+            <!-- Sezione Mi Piace -->
+            <div id="content-liked" class="content-section d-none">
+                <div class="alert alert-info">
+                    <i class="ti ti-info-circle me-2"></i>Funzionalità in arrivo.
+                </div>
+            </div>
+
+            <!-- Sezione Ticket -->
+            <div id="content-tickets" class="content-section d-none">
+                @if (Model.Tickets?.Any() == true)
+                {
+                    foreach (var ticket in Model.Tickets)
+                    {
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
+                                    <span class="badge bg-indigo">@ticket.Stato</span>
+                                </div>
+                                <p class="mt-3">@ticket.Descrizione</p>
+                                <small class="text-muted">
+                                    Aperto il @ticket.DataApertura.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle me-2"></i>Nessun ticket.
                     </div>
                 }
             </div>
@@ -133,10 +193,10 @@
         color: indigo;
     }
 
-    .nav-pills .nav-link.active {
-        background-color: indigo;
-        color: white;
-    }
+        .nav-pills .nav-link.active {
+            background-color: indigo;
+            color: white;
+        }
 
     .card {
         border-radius: 1rem;
@@ -146,4 +206,30 @@
     .card-body {
         padding: 1.5rem;
     }
+
+    .bg-indigo {
+        background-color: indigo;
+    }
 </style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+
+                    contentSections.forEach(section => section.classList.add('d-none'));
+                    const targetId = this.getAttribute('href').substring(1);
+                    document.getElementById(`content-${targetId}`).classList.remove('d-none');
+                });
+            });
+        });
+    </script>
+}
