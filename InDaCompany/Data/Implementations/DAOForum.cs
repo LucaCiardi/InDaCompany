@@ -38,12 +38,14 @@ namespace InDaCompany.Data.Implementations
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
-        public async Task<List<Forum>> GetForumByUser(string mailUser) {
-
+        public async Task<List<Forum>> GetForumByUser(string mailUser)
+        {
             const string query = @"
-                SELECT Forum.ID, Forum.Nome, Forum.Descrizione, Forum.Team
-                FROM Utenti LEFT JOIN Forum ON Utenti.Team = forum.Team
-                WHERE Utenti.Email = @MailUser";
+        SELECT DISTINCT F.ID, F.Nome, F.Descrizione, F.Team
+        FROM Forum F
+        INNER JOIN Utenti U ON U.Team = F.Team OR F.Team IS NULL
+        WHERE U.Email = @MailUser";
+
             var forums = new List<Forum>();
 
             using var conn = CreateConnection();
@@ -62,7 +64,7 @@ namespace InDaCompany.Data.Implementations
             }
             catch (SqlException ex)
             {
-                throw new DAOException($"Error retrieving tickets for creator {mailUser}", ex);
+                throw new DAOException($"Errore durante il recupero dei forum per l'utente {mailUser}", ex);
             }
         }
 
@@ -150,16 +152,17 @@ namespace InDaCompany.Data.Implementations
 
         protected override Forum MapFromReader(SqlDataReader reader)
         {
+            if (reader.IsDBNull(reader.GetOrdinal("ID")))
+            {
+                throw new DAOException("Forum ID cannot be null");
+            }
+
             return new Forum
             {
                 ID = reader.GetInt32(reader.GetOrdinal("ID")),
-                Nome = reader.GetString(reader.GetOrdinal("Nome")),
-                Descrizione = reader.IsDBNull(reader.GetOrdinal("Descrizione"))
-                    ? null
-                    : reader.GetString(reader.GetOrdinal("Descrizione")),
-                Team = reader.IsDBNull(reader.GetOrdinal("Team"))
-                    ? null
-                    : reader.GetString(reader.GetOrdinal("Team"))
+                Nome = reader.IsDBNull(reader.GetOrdinal("Nome")) ? null : reader.GetString(reader.GetOrdinal("Nome")),
+                Descrizione = reader.IsDBNull(reader.GetOrdinal("Descrizione")) ? null : reader.GetString(reader.GetOrdinal("Descrizione")),
+                Team = reader.IsDBNull(reader.GetOrdinal("Team")) ? null : reader.GetString(reader.GetOrdinal("Team"))
             };
         }
     }

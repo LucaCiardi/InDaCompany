@@ -1,11 +1,10 @@
-﻿using InDaCompany.Data.Interfaces;
-using InDaCompany.Models;
+﻿using InDaCompany.Models;
+
 namespace InDaCompany.Data.Interfaces
 {
     public interface IDAOThreadForum : IDAOBase<ThreadForum>
     {
-        Task<int> InsertWithIdsAsync(ThreadForum entity, int forumID, int autoreID);
-
-         Task<List<ThreadForum>> GetHomeThreadsAsync();
+        Task<List<ThreadForum>> GetThreadsByForumAsync(int forumID);
+        Task<List<ThreadForum>> GetThreadsByAuthorAsync(int authorID);
     }
 }

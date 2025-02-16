@@ -2,28 +2,34 @@
 using InDaCompany.Data.Implementations;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class ProfileController(
-        IConfiguration configuration,
-        IDAOUtenti DAOUtenti,
-        IDAOTicket DAOTicket,
-        IDAOPost DAOPost,
-        IDAOForum DAOForum,
-        IDAOThreadForum DAOThreadForum,
-        ILogger<ProfileController> logger) : BaseController(configuration, logger)
+    public class ProfileController : BaseController
     {
-        private readonly IDAOUtenti _daoUtenti = DAOUtenti;
-        private readonly IDAOTicket _daoTicket = DAOTicket;
-        private readonly IDAOPost _daoPost = DAOPost;
-        private readonly IDAOForum _daoForum = DAOForum;
-        private readonly IDAOThreadForum _daoThreadForum = DAOThreadForum;
+        private readonly IDAOUtenti _daoUtenti;
+        private readonly IDAOTicket _daoTicket;
+        private readonly IDAOForum _daoForum;
+        private readonly IDAOThreadForum _daoThreadForum;
+        private readonly ILogger<ProfileController> _logger;
 
+        public ProfileController(
+            ILogger<ProfileController> logger,
+            IDAOUtenti daoUtenti,
+            IDAOTicket daoTicket,
+            IDAOForum daoForum,
+            IDAOThreadForum daoThreadForum)
+            : base(logger)
+        {
+            _daoUtenti = daoUtenti;
+            _daoTicket = daoTicket;
+            _daoForum = daoForum;
+            _daoThreadForum = daoThreadForum;
+            _logger = logger;
+        }
         public async Task<IActionResult> Index()
         {
             try
@@ -32,57 +38,65 @@ namespace InDaCompany.Controllers
                 var user = await _daoUtenti.GetByIdAsync(userId);
 
                 if (user == null)
+                {
+                    _logger.LogWarning("Utente non trovato: {UserId}", userId);
                     return NotFound();
+                }
 
                 var ticketsByAuthor = await _daoTicket.GetByCreatoDaIDAsync(userId);
-                //var postsByAuthor = await _daoPost.GetByAutoreIDAsync(userId);
-                var threadByAuthor = await _daoThreadForum.GetAllAsync();
+                var threadsByAuthor = await _daoThreadForum.GetThreadsByAuthorAsync(userId);
                 var forumsOfAuthor = await _daoForum.GetForumByUser(user.Email);
 
-                ProfileViewModel profileModel = new ProfileViewModel {
+                var profileModel = new ProfileViewModel
+                {
                     Utente = user,
                     Tickets = ticketsByAuthor,
                     Forums = forumsOfAuthor,
-                    ThreadForums = threadByAuthor
+                    ThreadForums = threadsByAuthor
                 };
 
+                _logger.LogInformation("Profilo recuperato con successo per l'utente: {UserId}", userId);
                 return View(profileModel);
             }
             catch (DAOException ex)
             {
-                Logger.LogError(ex, "Error retrieving profile data");
+                _logger.LogError(ex, "Errore durante il recupero dei dati del profilo");
                 return HandleException(ex);
             }
         }
 
+        [HttpGet]
+        public IActionResult CreateTicket()
+        {
+            return RedirectToAction("Create", "Ticket");
+        }
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                throw new InvalidOperationException("User not properly authenticated");
+                _logger.LogWarning("Tentativo di accesso con utente non autenticato correttamente");
+                throw new InvalidOperationException("Utente non autenticato correttamente");
             }
             return userId;
         }
 
-        public IActionResult CreateTicket()
-        {
-            return RedirectToAction("Create", "Ticket");
-        }
-
-        public IActionResult CreatePost()
-        {
-            return RedirectToAction("Create", "Post");
-        }
-
         private async Task<Dictionary<string, int>> GetUserStats(int userId)
         {
-            return new Dictionary<string, int>
-        {
-            { "TotalTickets", (await _daoTicket.GetByCreatoDaIDAsync(userId)).Count },
-            { "TotalPosts", (await _daoPost.GetByAutoreIDAsync(userId)).Count }
-        };
+            try
+            {
+                return new Dictionary<string, int>
+                {
+                    { "TotalTickets", (await _daoTicket.GetByCreatoDaIDAsync(userId)).Count },
+                    { "TotalThreads", (await _daoThreadForum.GetThreadsByAuthorAsync(userId)).Count },
+                    { "TotalForums", (await _daoForum.GetForumByUser(User.FindFirst(ClaimTypes.Email)?.Value ?? "")).Count }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante il recupero delle statistiche utente: {UserId}", userId);
+                throw;
+            }
         }
     }
-
 }

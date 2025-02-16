@@ -4,64 +4,95 @@
     ViewData["Title"] = "Edit Ticket";
 }
 
-<h1>Modifica il Ticket d'assistenza #@Model.ID</h1>
+<div class="container mt-4">
+    <h1 class="mb-4">Modifica il Ticket d'assistenza #@Model.ID</h1>
 
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="ID" />
 
-            <div class="form-group">
-                <label asp-for="Titolo" class="control-label"></label>
-                <input asp-for="Titolo" class="form-control" />
-                <span asp-validation-for="Titolo" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Descrizione" class="control-label"></label>
-                <textarea asp-for="Descrizione" class="form-control" rows="3"> </textarea>
-                <span asp-validation-for="Descrizione" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataApertura" class="control-label"></label>
-                <input asp-for="DataApertura" class="form-control" rows="3" disabled> </input>
-            </div>
-            <div class="form-group">
-                <label asp-for="Stato" class="control-label"></label>
-                <select asp-for="Stato" class="form-control">
-                    <option value="Aperto">Aperto</option>
-                    <option value="In lavorazione">In lavorazione</option>
-                    <option value="Chiuso">Chiuso</option>
-                </select>                
-                <span asp-validation-for="Stato" class="text-danger"></span>
-            </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Titolo" class="control-label">Titolo</label>
+                    <input asp-for="Titolo" class="form-control" required />
+                    <span asp-validation-for="Titolo" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Descrizione" class="control-label">Descrizione</label>
+                    <textarea asp-for="Descrizione" class="form-control" rows="3" required></textarea>
+                    <span asp-validation-for="Descrizione" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Soluzione" class="control-label">Soluzione</label>
+                    <textarea asp-for="Soluzione" class="form-control" rows="3" id="soluzioneField"></textarea>
+                    <span asp-validation-for="Soluzione" class="text-danger"></span>
+                    <small class="text-muted">Richiesta se il ticket viene chiuso</small>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="DataApertura" class="control-label">Data Apertura</label>
+                    <input asp-for="DataApertura" class="form-control" readonly />
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Stato" class="control-label">Stato</label>
+                    <select asp-for="Stato" class="form-select" required onchange="checkSoluzione(this.value)">
+                        <option value="Aperto">Aperto</option>
+                        <option value="In lavorazione">In lavorazione</option>
+                        <option value="Chiuso">Chiuso</option>
+                    </select>
+                    <span asp-validation-for="Stato" class="text-danger"></span>
+                </div>
 
 
-            <div class="form-group">
-                <a asp-action="Edit" class="btn btn-indigo" id="btn-indigo">
-                    <i class="bi bi-save me-2"></i> Salva Modifiche
-                </a>
-                <a asp-action="Index" class="btn btn-indigo" id="btn-indigo">
-                    <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
-                </a>
-            </div>
-        </form>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-sm btn-indigo">
+                        <i class="bi bi-save me-2"></i> Salva Modifiche
+                    </button>
+                    <a asp-action="Index" class="btn btn-sm btn-indigo">
+                        <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
-    #btn-indigo {
-        margin-top: 0.75rem;
-    }
-
-    #btn-indigo {
+    .btn-indigo {
         color: #fff;
         background-color: indigo;
         border-color: indigo;
+        margin-top: 0.75rem;
     }
 
-    #btn-indigo:hover {
-        color: #fff;
-        background-color: rgb(141, 65, 195);
-        border-color: indigo;
-    }
+        .btn-indigo:hover {
+            color: #fff;
+            background-color: rgb(141, 65, 195);
+            border-color: indigo;
+        }
 </style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function checkSoluzione(stato) {
+            const soluzioneField = document.getElementById('soluzioneField');
+            if (stato === 'Chiuso') {
+                soluzioneField.required = true;
+                soluzioneField.closest('.form-group').style.display = 'block';
+            } else {
+                soluzioneField.required = false;
+                soluzioneField.closest('.form-group').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSoluzione(document.querySelector('[name="Stato"]').value);
+        });
+    </script>
+}
+

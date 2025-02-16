@@ -1,0 +1,34 @@
+﻿@model ThreadCreateViewModel
+
+<div class="container mt-4">
+    <h1 class="mb-4">Nuovo Thread</h1>
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="ForumID" />
+
+        <div class="form-group mb-3">
+            <label asp-for="Titolo" class="control-label">Titolo</label>
+            <input asp-for="Titolo" class="form-control" required />
+            <span asp-validation-for="Titolo" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Testo" class="control-label">Testo</label>
+            <textarea asp-for="Testo" class="form-control" rows="3" required></textarea>
+            <span asp-validation-for="Testo" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Immagine" class="control-label">Immagine</label>
+            <input asp-for="Immagine" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
+            <span asp-validation-for="Immagine" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-indigo">Pubblica</button>
+            <a asp-controller="Forum" asp-action="Details" asp-route-id="@Model.ForumID" class="btn btn-indigo">
+                Annulla
+            </a>
+        </div>
+    </form>
+</div>

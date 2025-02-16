@@ -2,8 +2,14 @@
 {
     public class HomeViewModel
     {
-        public List<Forum> Forums { get; set; } = [];
         public List<ThreadForum> Threads { get; set; } = [];
-    }
+        public List<Forum> Forums { get; set; } = [];
 
+        public int TotalThreads => Threads.Count;
+        public int TotalForums => Forums.Count;
+
+        public Dictionary<string, List<ThreadForum>> ThreadsByForum =>
+            Threads.GroupBy(t => Forums.FirstOrDefault(f => f.ID == t.ForumID)?.Nome ?? "Altro")
+                   .ToDictionary(g => g.Key, g => g.ToList());
+    }
 }

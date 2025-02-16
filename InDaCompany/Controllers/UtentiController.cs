@@ -1,58 +1,45 @@
 ﻿using System.Security.Claims;
-using System.Text.Json.Serialization;
-using InDaCompany.Data.Implementations;
-using InDaCompany.Data.Interfaces;
-using InDaCompany.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using InDaCompany.Data.Interfaces;
+using InDaCompany.Models;
+using InDaCompany.Data.Implementations;
+using InDaCompany.ViewModels;
 
 namespace InDaCompany.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class UtentiController(
-        IConfiguration configuration,
-        IDAOUtenti DAOUtenti,
-        ILogger<UtentiController> logger) : BaseController(configuration, logger)
+    public class UtentiController : BaseController
     {
-        private readonly IDAOUtenti _daoUtenti = DAOUtenti;
+        private readonly IDAOUtenti _daoUtenti;
+        private readonly ILogger<UtentiController> _logger;
 
-        public async Task<IActionResult> Index()
+        public UtentiController(
+            ILogger<UtentiController> logger,
+            IDAOUtenti daoUtenti)
+            : base(logger)
         {
-            try
-            {
-                var utenti = await _daoUtenti.GetAllAsync();
-                return View(utenti);
-            }
-            catch (DAOException ex)
-            {
-                logger.LogError(ex, "Error retrieving users");
-                return HandleException(ex);
-            }
+            _daoUtenti = daoUtenti;
+            _logger = logger;
         }
-
-        public IActionResult Create()
-        {
-            return View(new Utente());
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Utente utente)
+        public async Task<IActionResult> Create([Bind("Nome,Cognome,Email,PasswordHash,Ruolo,Team")] Utente utente)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
                     await _daoUtenti.InsertAsync(utente);
-                    logger.LogInformation("User created successfully: {Email}", utente.Email);
+                    _logger.LogInformation("Utente creato con successo: {Email}", utente.Email);
                     TempData["Success"] = "Utente creato con successo!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error creating user: {Email}", utente.Email);
+                    _logger.LogError(ex, "Errore durante la creazione dell'utente: {Email}", utente.Email);
                     TempData["Error"] = "Errore nella creazione dell'utente";
                     return View(utente);
                 }
@@ -60,6 +47,7 @@ namespace InDaCompany.Controllers
             return View(utente);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -67,24 +55,24 @@ namespace InDaCompany.Controllers
                 var utente = await _daoUtenti.GetByIdAsync(id);
                 if (utente == null)
                 {
-                    logger.LogWarning("User not found: {Id}", id);
+                    _logger.LogWarning("Utente non trovato: {Id}", id);
                     return NotFound();
                 }
                 return View(utente);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving user for edit: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero dell'utente: {Id}", id);
                 return HandleException(ex);
             }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Utente utente)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Nome,Cognome,Email,PasswordHash,Ruolo,Team")] Utente utente)
         {
             if (id != utente.ID)
             {
+                _logger.LogWarning("ID utente non corrispondente");
                 return NotFound();
             }
 
@@ -104,20 +92,20 @@ namespace InDaCompany.Controllers
                     }
 
                     await _daoUtenti.UpdateAsync(utente);
-                    logger.LogInformation("User updated successfully: {Id}", id);
+                    _logger.LogInformation("Utente aggiornato con successo: {Id}", id);
                     TempData["Success"] = "Utente modificato con successo";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error updating user: {Id}", id);
+                    _logger.LogError(ex, "Errore durante l'aggiornamento dell'utente: {Id}", id);
                     TempData["Error"] = "Errore durante la modifica dell'utente";
                     return View(utente);
                 }
             }
             return View(utente);
         }
-
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -125,7 +113,7 @@ namespace InDaCompany.Controllers
                 var utente = await _daoUtenti.GetByIdAsync(id);
                 if (utente == null)
                 {
-                    logger.LogWarning("User not found for deletion: {Id}", id);
+                    _logger.LogWarning("Utente non trovato per l'eliminazione: {Id}", id);
                     return NotFound();
                 }
 
@@ -139,7 +127,7 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving user for deletion: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero dell'utente per l'eliminazione: {Id}", id);
                 return HandleException(ex);
             }
         }
@@ -163,18 +151,17 @@ namespace InDaCompany.Controllers
                 }
 
                 await _daoUtenti.DeleteAsync(id);
-                logger.LogInformation("User deleted successfully: {Id}", id);
+                _logger.LogInformation("Utente eliminato con successo: {Id}", id);
                 TempData["Success"] = "Utente eliminato con successo";
                 return RedirectToAction(nameof(Index));
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error deleting user: {Id}", id);
+                _logger.LogError(ex, "Errore durante l'eliminazione dell'utente: {Id}", id);
                 TempData["Error"] = "Errore durante l'eliminazione dell'utente";
                 return RedirectToAction(nameof(Index));
             }
         }
-
         private async Task<bool> HasOtherAdminsAsync(int currentUserId)
         {
             try
@@ -182,15 +169,19 @@ namespace InDaCompany.Controllers
                 var allUsers = await _daoUtenti.GetAllAsync();
                 return allUsers.Any(u => u.Ruolo == "Admin" && u.ID != currentUserId);
             }
-            catch (DAOException)
+            catch (DAOException ex)
             {
+                _logger.LogError(ex, "Errore durante la verifica di altri amministratori");
                 return true;
             }
         }
 
         [AllowAnonymous]
-        public IActionResult Login() {
-            if (User.Identity.IsAuthenticated) {
+        [HttpGet]
+        public IActionResult Login()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
                 return RedirectToAction("Index", "Home");
             }
             return View();
@@ -198,45 +189,139 @@ namespace InDaCompany.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginModel model) {
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var user = await _daoUtenti.AuthenticateAsync(model.Username, model.Password);
 
-            if (ModelState.IsValid) {
-                var user = _daoUtenti.Authenticate(model.Username, model.Password);
+                    if (user != null)
+                    {
+                        var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim(ClaimTypes.Role, user.Ruolo),
+                    new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
+                    new Claim("UserId", user.ID.ToString())
+                };
 
-                if (user != null) {
-                    var claims = new List<Claim> {
-                        new Claim(ClaimTypes.Name, user.Email),
-                        new Claim(ClaimTypes.Role, user.Ruolo),
-                        new Claim(ClaimTypes.NameIdentifier, user.ID.ToString())
-                    };
+                        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        var principal = new ClaimsPrincipal(identity);
 
-                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var principal = new ClaimsPrincipal(identity);
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = model.RememberMe,
+                            ExpiresUtc = model.RememberMe ?
+                                DateTimeOffset.UtcNow.AddDays(30) :
+                                DateTimeOffset.UtcNow.AddHours(8)
+                        };
 
-                    var authProperties = new AuthenticationProperties {
-                        IsPersistent = model.RememberMe,
-                        ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : DateTimeOffset.UtcNow.AddHours(2)
-                    };
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            principal,
+                            authProperties);
 
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+                        _logger.LogInformation("Login effettuato con successo per l'utente: {Email}", user.Email);
+                        return RedirectToAction("Index", "Home");
+                    }
 
-                    ViewBag.User = user;
-                    return RedirectToAction("Index", "Home");
+                    ModelState.AddModelError("", "Username o password non validi");
                 }
-
-                ModelState.AddModelError("", "Username o password incorretti");
+                catch (DAOException ex)
+                {
+                    _logger.LogError(ex, "Errore durante l'autenticazione");
+                    ModelState.AddModelError("", "Errore durante l'autenticazione. Riprova.");
+                }
             }
             return View(model);
         }
 
         [HttpPost]
+            [ValidateAntiForgeryToken]
+            [AllowAnonymous]
+            public async Task<IActionResult> Logout()
+            {
+                _logger.LogInformation("Logout eseguito per l'utente: {User}", User.Identity?.Name);
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Login");
+            }
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        [AllowAnonymous]
-        public async Task<IActionResult> Logout() {
-            logger.LogInformation("Logout eseguito per l'utente {User}", User.Identity?.Name);
+        public async Task<IActionResult> UpdateProfilePicture([FromForm] FotoProfiloViewModel model)
+        {
+            try
+            {
+                if (model.Foto == null || model.Foto.Length == 0)
+                {
+                    return Json(new { success = false, message = "Nessun file caricato" });
+                }
 
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Home");
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
+                if (!allowedTypes.Contains(model.Foto.ContentType.ToLower()))
+                {
+                    return Json(new { success = false, message = "Formato file non supportato" });
+                }
+
+                if (model.Foto.Length > 2 * 1024 * 1024) 
+                {
+                    return Json(new { success = false, message = "L'immagine non può superare i 2MB" });
+                }
+
+                using var memoryStream = new MemoryStream();
+                await model.Foto.CopyToAsync(memoryStream);
+                await _daoUtenti.UpdateProfilePictureAsync(model.UtenteId, memoryStream.ToArray());
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating profile picture for user: {Id}", model.UtenteId);
+                return Json(new { success = false, message = "Errore durante l'aggiornamento" });
+            }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveProfilePicture(int id)
+        {
+            try
+            {
+                await _daoUtenti.SetDefaultProfilePictureAsync(id);
+                return RedirectToAction("Index", "Profile");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting default profile picture for user: {Id}", id);
+                return RedirectToAction("Index", "Profile");
+            }
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProfilePicture(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente?.FotoProfilo != null)
+                {
+                    return File(utente.FotoProfilo, "image/jpeg");
+                }
+
+                var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                    "wwwroot", "images", "profile.jpg");
+                return PhysicalFile(defaultAvatarPath, "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving profile picture for user: {Id}", id);
+                var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                    "wwwroot", "images", "profile.jpg");
+                return PhysicalFile(defaultAvatarPath, "image/jpeg");
+            }
+        }
+
     }
 }

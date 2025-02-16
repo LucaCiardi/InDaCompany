@@ -4,6 +4,7 @@ namespace InDaCompany.Data.Interfaces
 {
     public interface IDAOMessaggiThread : IDAOBase<MessaggioThread>
     {
-        Task<int> InsertAsync(MessaggioThread entity, int threadID, int autoreID);
+        Task<List<MessaggioThread>> GetMessagesByThreadAsync(int threadID);
+        Task<List<MessaggioThread>> GetMessagesByAuthorAsync(int authorID);
     }
 }

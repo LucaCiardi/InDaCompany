@@ -2,38 +2,42 @@
 @{
     ViewData["Title"] = "Forum";
 }
-<div class="container mt-4">
-    <h1 class="forum-title"> Forum Team @Model.Forum.</h1>
-    <button class="btn btn-indigo my-3 rounded-pill" id="btnCreateThread"></button>
-    <div id="createThreadForm" class="d-none p-3 bg-light rounded">
-        <input type="text" id="threadTitle" class="form-control mb-2 rounded-pill" placeholder="Titolo">
-        <textarea id="threadContent" class="form-control mb-2 rounded" placeholder="Contenuto"></textarea>
-        <button class="btn btn-indigo rounded-pill" id="submitThread">Pubblica</button>
-    </div>
-    <ul class="list-group">
-        @foreach (var thread in Model.Threads)
-        {
-            <li class="list-group-item rounded mb-3 thread-item">
-                <h4 class="text-indigo">@thread.Titolo</h4>
-                <p>Data: @thread.DataCreazione</p>
 
-                <button class="btn btn-outline-indigo btn-sm rounded-pill btnComment" data-thread-id="@thread.ID">Commenta</button>
-                <div class="comments d-none p-2 mt-2 bg-light border rounded shadow-sm" id="comments-@thread.ID">
-                    <textarea class="form-control my-2 rounded" placeholder="Scrivi un commento..."></textarea>
-                    <button class="btn btn-indigo btn-sm rounded pill">Invia</button>
-                </div>
-            </li>
-        }
-    </ul>
+<div class="container mt-4">
+    <h1 class="forum-title">Forum Team @Model.Forums?.FirstOrDefault()?.Team</h1>
+
+    <a asp-controller="ThreadForum" asp-action="Create"
+       asp-route-forumId="@Model.Forums?.FirstOrDefault()?.ID"
+       class="btn btn-indigo my-3 rounded-pill">
+        <i class="ti ti-plus me-2"></i>Nuovo Thread
+    </a>
+
+    @if (Model.Threads?.Any() == true)
+    {
+        <div class="thread-list">
+            @foreach (var thread in Model.Threads)
+            {
+                <partial name="_ThreadCard" model="thread" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Nessun thread disponibile in questo forum.
+        </div>
+    }
 </div>
-<script>
-    document.getElementById("btnCreateThread").addEventListener("click", function () {
-        document.getElementById("createThreadForm").classList.toggle("d-none");
-    });
-    document.querySelectorAll(".btnComment").forEach(btn => {
-        btn.addEventListener("click", function () {
-            let threadId = this.getAttribute("data-thread-id");
-            document.getElementById(`comments-${threadId}`).classList.toggle("d-none");
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll(".btnComment").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    const threadId = this.getAttribute("data-thread-id");
+                    document.getElementById(`comments-${threadId}`).classList.toggle("d-none");
+                });
+            });
         });
-    });
-</script>
+    </script>
+}

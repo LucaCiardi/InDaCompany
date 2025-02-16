@@ -1,0 +1,50 @@
+﻿@model ThreadForum
+
+<div class="container mt-4">
+    <h1 class="mb-4">Modifica Thread</h1>
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="returnUrl" value="@Context.Request.Headers["Referer"]" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="ID" />
+        <input type="hidden" asp-for="ForumID" />
+        <input type="hidden" asp-for="AutoreID" />
+        <input type="hidden" asp-for="DataCreazione" />
+
+        <div class="form-group mb-3">
+            <label asp-for="Titolo" class="control-label">Titolo</label>
+            <input asp-for="Titolo" class="form-control" required />
+            <span asp-validation-for="Titolo" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Testo" class="control-label">Testo</label>
+            <textarea asp-for="Testo" class="form-control" rows="3" required></textarea>
+            <span asp-validation-for="Testo" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="control-label">Immagine Attuale</label>
+            @if (Model.Immagine != null)
+            {
+                <div class="mb-2">
+                    <img src="@Url.Action("GetImage", new { id = Model.ID })" alt="Immagine Thread" class="img-fluid" style="max-height: 200px;" />
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="RemoveImage" class="form-check-input" id="removeImage" />
+                    <label class="form-check-label" for="removeImage">Rimuovi immagine</label>
+                </div>
+            }
+            <input type="file" name="NewImage" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
+            <small class="text-muted">Lascia vuoto per mantenere l'immagine attuale</small>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-indigo">
+                <i class="bi bi-save me-2"></i>Salva Modifiche
+            </button>
+            <a asp-controller="Forum" asp-action="Details" asp-route-id="@Model.ForumID" class="btn btn-indigo">
+                <i class="bi bi-arrow-left me-2"></i>Torna al Forum
+            </a>
+        </div>
+    </form>
+</div>

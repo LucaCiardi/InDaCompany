@@ -1,0 +1,65 @@
+﻿@model ThreadForum
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">@Model.Titolo</h5>
+        <small class="text-muted">@Model.DataCreazione.ToString("dd/MM/yyyy HH:mm")</small>
+    </div>
+
+    <div class="card-body">
+        @if (Model.Immagine != null)
+        {
+            <img src="@Url.Action("GetImage", "ThreadForum", new { id = Model.ID })"
+                 alt="Immagine Thread"
+                 class="img-fluid mb-3 rounded" />
+        }
+        <p class="card-text">@Model.Testo</p>
+    </div>
+
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                @if (User.FindFirst("UserId")?.Value == Model.AutoreID.ToString())
+                {
+                    <a asp-controller="ThreadForum" asp-action="Edit" asp-route-id="@Model.ID"
+                       class="btn btn-sm btn-indigo me-2">
+                        <i class="bi bi-pencil me-1"></i>Modifica
+                    </a>
+                }
+                <button class="btn btn-outline-indigo btn-sm me-2">
+                    <i class="ti ti-thumb-up"></i> Mi piace
+                </button>
+            </div>
+            <button class="btn btn-outline-indigo btn-sm btnComment" data-thread-id="@Model.ID">
+                <i class="bi bi-chat-dots me-1"></i>Commenti
+            </button>
+        </div>
+
+        <div class="comments d-none" id="comments-@Model.ID">
+            <form asp-controller="MessaggiThread" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ThreadID" value="@Model.ID" />
+                <div class="mb-3">
+                    <textarea name="Testo" class="form-control" rows="2"
+                              placeholder="Scrivi un commento..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-indigo">
+                    <i class="bi bi-send me-1"></i>Invia
+                </button>
+            </form>
+
+            @if (Model.Messages?.Any() == true)
+            {
+                <div class="mt-3">
+                    @foreach (var message in Model.Messages)
+                    {
+                        <div class="border-bottom py-2">
+                            <small class="text-muted">@message.DataFormattata</small>
+                            <p class="mb-0">@message.Testo</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

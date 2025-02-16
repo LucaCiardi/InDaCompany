@@ -1,19 +1,25 @@
-﻿using InDaCompany.Data.Implementations;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using InDaCompany.Data.Implementations;
 
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class TicketController(
-        IConfiguration configuration,
-        IDAOTicket DAOTicket,
-        ILogger<TicketController> logger) : BaseController(configuration, logger)
+    public class TicketController : BaseController
     {
-        private readonly IDAOTicket _daoTicket = DAOTicket;
+        private readonly IDAOTicket _daoTicket;
+        private readonly ILogger<TicketController> _logger;
 
+        public TicketController(
+            ILogger<TicketController> logger,
+            IDAOTicket daoTicket)
+            : base(logger)
+        {
+            _daoTicket = daoTicket;
+            _logger = logger;
+        }
         public async Task<IActionResult> Index()
         {
             try
@@ -23,11 +29,12 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving tickets");
+                _logger.LogError(ex, "Errore durante il recupero dei ticket");
                 return HandleException(ex);
             }
         }
 
+        [HttpGet]
         public IActionResult Create()
         {
             return View(new Ticket { Stato = "Aperto" });
@@ -35,7 +42,7 @@ namespace InDaCompany.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Ticket ticket)
+        public async Task<IActionResult> Create([Bind("Titolo,Descrizione,AssegnatoAID")] Ticket ticket)
         {
             if (ModelState.IsValid)
             {
@@ -45,19 +52,20 @@ namespace InDaCompany.Controllers
                     ticket.CreatoDaID = GetCurrentUserId();
                     await _daoTicket.InsertAsync(ticket);
 
-                    logger.LogInformation("Ticket created successfully by user {UserId}", ticket.CreatoDaID);
+                    _logger.LogInformation("Ticket creato con successo dall'utente {UserId}", ticket.CreatoDaID);
                     TempData["Success"] = "Ticket creato con successo";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error creating ticket");
+                    _logger.LogError(ex, "Errore durante la creazione del ticket");
                     ModelState.AddModelError("", "Impossibile salvare le modifiche. Riprovare.");
                 }
             }
             return View(ticket);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -65,49 +73,58 @@ namespace InDaCompany.Controllers
                 var ticket = await _daoTicket.GetByIdAsync(id);
                 if (ticket == null)
                 {
-                    logger.LogWarning("Ticket not found: {Id}", id);
+                    _logger.LogWarning("Ticket non trovato: {Id}", id);
                     return NotFound();
                 }
                 return View(ticket);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving ticket for edit: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero del ticket: {Id}", id);
                 return HandleException(ex);
             }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Ticket ticket)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Titolo,Descrizione,Stato,AssegnatoAID,Soluzione")] Ticket ticket)
         {
+            if (id != ticket.ID) return NotFound();
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     var originalTicket = await _daoTicket.GetByIdAsync(ticket.ID);
-                    if (originalTicket == null)
-                    {
-                        return NotFound();
-                    }
+                    if (originalTicket == null) return NotFound();
 
                     ticket.DataApertura = originalTicket.DataApertura;
                     ticket.CreatoDaID = originalTicket.CreatoDaID;
 
+                    if (ticket.Stato == "Chiuso")
+                    {
+                        if (string.IsNullOrEmpty(ticket.Soluzione))
+                        {
+                            ModelState.AddModelError("Soluzione", "La soluzione è obbligatoria per i ticket chiusi");
+                            return View(ticket);
+                        }
+                        ticket.DataChiusura = DateTime.Now;
+                    }
+
                     await _daoTicket.UpdateAsync(ticket);
-                    logger.LogInformation("Ticket updated successfully: {Id}", ticket.ID);
                     TempData["Success"] = "Ticket modificato con successo";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DAOException ex)
                 {
-                    logger.LogError(ex, "Error updating ticket: {Id}", ticket.ID);
+                    _logger.LogError(ex, "Errore durante l'aggiornamento del ticket: {Id}", ticket.ID);
                     ModelState.AddModelError("", "Impossibile salvare le modifiche. Riprovare.");
                 }
             }
             return View(ticket);
         }
 
+
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -115,14 +132,14 @@ namespace InDaCompany.Controllers
                 var ticket = await _daoTicket.GetByIdAsync(id);
                 if (ticket == null)
                 {
-                    logger.LogWarning("Ticket not found for deletion: {Id}", id);
+                    _logger.LogWarning("Ticket non trovato per l'eliminazione: {Id}", id);
                     return NotFound();
                 }
                 return View(ticket);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving ticket for deletion: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero del ticket per l'eliminazione: {Id}", id);
                 return HandleException(ex);
             }
         }
@@ -133,25 +150,19 @@ namespace InDaCompany.Controllers
         {
             try
             {
-                var ticket = await _daoTicket.GetByIdAsync(id);
-                if (ticket == null)
-                {
-                    return NotFound();
-                }
-
                 await _daoTicket.DeleteAsync(id);
-                logger.LogInformation("Ticket deleted successfully: {Id}", id);
                 TempData["Success"] = "Ticket eliminato con successo";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DAOException ex)
+            catch (Exception ex)
             {
-                logger.LogError(ex, "Error deleting ticket: {Id}", id);
+                _logger.LogError(ex, "Error deleting ticket: {Id}", id);
                 TempData["Error"] = "Errore durante l'eliminazione del ticket";
                 return RedirectToAction(nameof(Index));
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> ByCreator(int creatorId)
         {
             try
@@ -161,11 +172,12 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving tickets by creator: {CreatorId}", creatorId);
+                _logger.LogError(ex, "Errore durante il recupero dei ticket per creatore: {CreatorId}", creatorId);
                 return HandleException(ex);
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> ByAssignee(int assigneeId)
         {
             try
@@ -175,11 +187,12 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving tickets by assignee: {AssigneeId}", assigneeId);
+                _logger.LogError(ex, "Errore durante il recupero dei ticket assegnati: {AssigneeId}", assigneeId);
                 return HandleException(ex);
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> ByStatus(string status)
         {
             try
@@ -189,11 +202,12 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving tickets by status: {Status}", status);
+                _logger.LogError(ex, "Errore durante il recupero dei ticket per stato: {Status}", status);
                 return HandleException(ex);
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Search(string term)
         {
             if (string.IsNullOrWhiteSpace(term))
@@ -208,7 +222,7 @@ namespace InDaCompany.Controllers
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error searching tickets with term: {Term}", term);
+                _logger.LogError(ex, "Errore durante la ricerca dei ticket con termine: {Term}", term);
                 return HandleException(ex);
             }
         }
@@ -218,9 +232,10 @@ namespace InDaCompany.Controllers
             var userIdClaim = User.FindFirst("UserId");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                throw new InvalidOperationException("User not properly authenticated");
+                throw new InvalidOperationException("Utente non autenticato correttamente");
             }
             return userId;
         }
     }
+
 }

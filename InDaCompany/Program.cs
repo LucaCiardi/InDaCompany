@@ -10,7 +10,6 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IDAOUtenti>(provider => new DAOUtenti(connectionString));
-builder.Services.AddScoped<IDAOPost>(provider => new DAOPost(connectionString));
 builder.Services.AddScoped<IDAOForum>(provider => new DAOForum(connectionString));
 builder.Services.AddScoped<IDAOThreadForum>(provider => new DAOThreadForum(connectionString));
 builder.Services.AddScoped<IDAOMessaggiThread>(provider => new DAOMessaggiThread(connectionString));
@@ -21,29 +20,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options => {
         options.LoginPath = "/Utenti/Login";
         options.LogoutPath = "/Utenti/Logout";
-        options.AccessDeniedPath = "/Utenti/Login";
+        options.AccessDeniedPath = "/Home/AccessDenied";  
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);   
+        options.SlidingExpiration = true;                
     });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Utenti}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"); 
 
 app.Run();

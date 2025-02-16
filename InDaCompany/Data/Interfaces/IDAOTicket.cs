@@ -13,5 +13,6 @@ namespace InDaCompany.Data.Interfaces
         Task<List<Ticket>> GetByDateAsync(DateTime data);
 
         Task<List<Ticket>> SearchAsync(string searchTerm);
+        Task UpdateSoluzioneAsync(int ticketId, string soluzione, DateTime dataChiusura);
     }
 }

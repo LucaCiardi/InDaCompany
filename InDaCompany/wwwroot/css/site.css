@@ -168,3 +168,65 @@ body{
 .rounded-pill{
     border-radius: 50px;
 }
+.profile-picture-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.edit-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    padding: 4px;
+    display: none;
+}
+
+.profile-picture-container:hover .edit-overlay {
+    display: block;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.options-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+    .options-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 4px 8px;
+        color: indigo;
+    }
+
+        .options-menu button:hover {
+            background-color: #f8f9fa;
+        }
+.btn-indigo {
+    color: #fff;
+    background-color: indigo;
+    border-color: indigo;
+}
+
+    .btn-indigo:hover {
+        color: #fff;
+        background-color: rgb(141, 65, 195);
+        border-color: indigo;
+    }

@@ -3,18 +3,47 @@ using Microsoft.AspNetCore.Authorization;
 using InDaCompany.Models;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Data.Implementations;
+using System.Diagnostics.Metrics;
+using System;
 
 namespace InDaCompany.Controllers
 {
     [Authorize]
-    public class ThreadForumController(
-        IConfiguration configuration,
-        IDAOThreadForum DAOThread,
-        IDAOForum DAOForum,
-        ILogger<ThreadForumController> logger) : BaseController(configuration, logger)
+    public class ThreadForumController : BaseController
     {
-        private readonly IDAOForum _daoForum = DAOForum;
+        private readonly IDAOThreadForum _daoThread;
+        private readonly IDAOForum _daoForum;
+        private readonly ILogger<ThreadForumController> _logger;
 
+        public ThreadForumController(
+            ILogger<ThreadForumController> logger,
+            IDAOThreadForum daoThread,
+            IDAOForum daoForum)
+            : base(logger)
+        {
+            _daoThread = daoThread;
+            _daoForum = daoForum;
+            _logger = logger;
+        }
+        [AllowAnonymous]
+        public async Task<IActionResult> GetImage(int id)
+        {
+            try
+            {
+                var thread = await _daoThread.GetByIdAsync(id);
+                if (thread?.Immagine != null)
+                {
+                    return File(thread.Immagine, "image/jpeg"); 
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving thread image: {Id}", id);
+                return NotFound();
+            }
+        }
+        [HttpGet]
         public async Task<IActionResult> Create(int forumId)
         {
             try
@@ -26,48 +55,133 @@ namespace InDaCompany.Controllers
                 }
 
                 ViewBag.ForumName = forum.Nome;
-                return View(new ThreadForum { ForumID = forumId });
+                var viewModel = new ThreadCreateViewModel { ForumID = forumId };
+                return View(viewModel);
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error preparing thread creation for forum: {Id}", forumId);
+                _logger.LogError(ex, "Errore durante la preparazione del thread");
                 return HandleException(ex);
             }
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ThreadForum thread)
+        public async Task<IActionResult> Create(ThreadCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    thread.AutoreID = int.Parse(User.FindFirst("UserId")?.Value ??
-                        throw new InvalidOperationException("User not authenticated"));
+                    var thread = new ThreadForum
+                    {
+                        Titolo = model.Titolo,
+                        Testo = model.Testo,
+                        ForumID = model.ForumID,
+                        AutoreID = int.Parse(User.FindFirst("UserId")?.Value ??
+                            throw new InvalidOperationException("Utente non autenticato"))
+                    };
 
-                    await DAOThread.InsertAsync(thread);
-                    logger.LogInformation("Thread created successfully in forum: {ForumId}", thread.ForumID);
+                    if (model.Immagine != null)
+                    {
+                        using var memoryStream = new MemoryStream();
+                        await model.Immagine.CopyToAsync(memoryStream);
+                        thread.Immagine = memoryStream.ToArray();
+                    }
+
+                    await _daoThread.InsertAsync(thread);
                     return RedirectToAction("Details", "Forum", new { id = thread.ForumID });
                 }
-                catch (DAOException ex)
+                catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error creating thread");
-                    ModelState.AddModelError("", "Unable to create thread. Please try again.");
+                    _logger.LogError(ex, "Errore durante la creazione del thread");
+                    ModelState.AddModelError("", "Impossibile creare il thread. Riprova.");
                 }
             }
 
             try
             {
-                var forum = await _daoForum.GetByIdAsync(thread.ForumID);
-                ViewBag.ForumName = forum?.Nome ?? "Unknown Forum";
+                var forum = await _daoForum.GetByIdAsync(model.ForumID);
+                ViewBag.ForumName = forum?.Nome ?? "Forum sconosciuto";
             }
             catch (DAOException ex)
             {
-                logger.LogError(ex, "Error retrieving forum name");
+                _logger.LogError(ex, "Errore durante il recupero del nome del forum");
+            }
+
+            return View(model);
+        }
+       
+
+
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? NewImage, bool RemoveImage = false, string? returnUrl = null)
+        {
+            if (id != thread.ID) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var originalThread = await _daoThread.GetByIdAsync(id);
+                    if (originalThread == null) return NotFound();
+
+                    if (NewImage != null)
+                    {
+                        using var memoryStream = new MemoryStream();
+                        await NewImage.CopyToAsync(memoryStream);
+                        thread.Immagine = memoryStream.ToArray();
+                    }
+                    else if (!RemoveImage)
+                    {
+                        thread.Immagine = originalThread.Immagine;
+                    }
+                    else
+                    {
+                        thread.Immagine = null;
+                    }
+
+                    await _daoThread.UpdateAsync(thread);
+
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
+                    return RedirectToAction("Index", "Forum");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating thread: {Id}", id);
+                    ModelState.AddModelError("", "Errore durante l'aggiornamento del thread");
+                }
             }
 
             return View(thread);
         }
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                var thread = await _daoThread.GetByIdAsync(id);
+                if (thread == null) return NotFound();
+
+                if (thread.AutoreID != int.Parse(User.FindFirst("UserId")?.Value ?? "0"))
+                {
+                    return Forbid();
+                }
+
+                return View(thread);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving thread: {Id}", id);
+                return HandleException(ex);
+            }
+        }
+
     }
 }
