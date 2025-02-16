@@ -11,8 +11,8 @@ namespace InDaCompany.Data.Implementations
         public async Task<List<Utente>> GetAllAsync()
         {
             const string query = @"
-    SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
-    FROM Utenti";
+            SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+            FROM Utenti";
 
             return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
         }
@@ -20,20 +20,21 @@ namespace InDaCompany.Data.Implementations
         public async Task<Utente?> GetByIdAsync(int id)
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti 
-                WHERE ID = @ID";
+            SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+            FROM Utenti 
+            WHERE ID = @ID";
 
             var parameters = new[] { new SqlParameter("@ID", id) };
             return await ExecuteQuerySingleAsync(query, parameters);
         }
 
+
         public async Task<Utente?> GetByEmailAsync(string email)
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti 
-                WHERE Email = @Email";
+            SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+            FROM Utenti 
+            WHERE Email = @Email";
 
             var parameters = new[] { new SqlParameter("@Email", email) };
             return await ExecuteQuerySingleAsync(query, parameters);
@@ -46,23 +47,25 @@ namespace InDaCompany.Data.Implementations
             var exists = await ExistsAsync(query, parameters);
             return !exists;
         }
+
         public async Task<int> InsertAsync(Utente entity)
         {
             const string query = @"
-                INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione) 
-                VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @DataCreazione);
-                SELECT SCOPE_IDENTITY();";
+            INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo) 
+            VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @DataCreazione, @FotoProfilo);
+            SELECT SCOPE_IDENTITY();";
 
             var parameters = new[]
             {
-                new SqlParameter("@Nome", entity.Nome),
-                new SqlParameter("@Cognome", entity.Cognome),
-                new SqlParameter("@Email", entity.Email),
-                new SqlParameter("@PasswordHash", entity.PasswordHash),
-                new SqlParameter("@Ruolo", entity.Ruolo),
-                new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
-                new SqlParameter("@DataCreazione", DateTime.Now)
-            };
+            new SqlParameter("@Nome", entity.Nome),
+            new SqlParameter("@Cognome", entity.Cognome),
+            new SqlParameter("@Email", entity.Email),
+            new SqlParameter("@PasswordHash", entity.PasswordHash),
+            new SqlParameter("@Ruolo", entity.Ruolo),
+            new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
+            new SqlParameter("@DataCreazione", DateTime.Now),
+            new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)
+        };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
@@ -83,27 +86,28 @@ namespace InDaCompany.Data.Implementations
                 throw new DAOException("Errore durante l'inserimento dell'utente", ex);
             }
         }
-
         public async Task UpdateAsync(Utente entity)
         {
             const string query = @"
-                UPDATE Utenti 
-                SET Nome = @Nome,
-                    Cognome = @Cognome,
-                    Email = @Email,
-                    Ruolo = @Ruolo,
-                    Team = @Team
-                WHERE ID = @ID";
+            UPDATE Utenti 
+            SET Nome = @Nome,
+                Cognome = @Cognome,
+                Email = @Email,
+                Ruolo = @Ruolo,
+                Team = @Team,
+                FotoProfilo = @FotoProfilo
+            WHERE ID = @ID";
 
             var parameters = new[]
             {
-                new SqlParameter("@ID", entity.ID),
-                new SqlParameter("@Nome", entity.Nome),
-                new SqlParameter("@Cognome", entity.Cognome),
-                new SqlParameter("@Email", entity.Email),
-                new SqlParameter("@Ruolo", entity.Ruolo),
-                new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value)
-            };
+            new SqlParameter("@ID", entity.ID),
+            new SqlParameter("@Nome", entity.Nome),
+            new SqlParameter("@Cognome", entity.Cognome),
+            new SqlParameter("@Email", entity.Email),
+            new SqlParameter("@Ruolo", entity.Ruolo),
+            new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
+            new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)
+        };
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
