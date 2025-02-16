@@ -31,6 +31,7 @@ namespace InDaCompany.Controllers
             {
                 int userId = GetCurrentUserId();
                 var user = await _daoUtenti.GetByIdAsync(userId);
+                ViewBag.Utente = user;
                 if (user.Ruolo == "Admin" || user.Ruolo == "Manager")
                 {
                     var tickets = await _daoTicket.GetAllAsync();
@@ -38,8 +39,9 @@ namespace InDaCompany.Controllers
                 }
                 else
                 {
-                    var tickets = await _daoTicket.GetByAssegnatoAIDAsync(userId);
-                    tickets.Concat(await _daoTicket.GetByCreatoDaIDAsync(userId));
+                    var ticketsAssegnati = await _daoTicket.GetByAssegnatoAIDAsync(userId);
+                    var ticketsCreati = await _daoTicket.GetByCreatoDaIDAsync(userId);
+                    var tickets = ticketsAssegnati.Concat(ticketsCreati);
                     return View(tickets);
                 }
             }

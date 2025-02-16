@@ -66,10 +66,12 @@
 							<a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
 								<i class="bi bi-pencil"></i> Modifica
 							</a>
-
-							<a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
+										@if (item.CreatoDaID == ViewBag.Utente.ID || ViewBag.Utente.Ruolo == "Admin" || ViewBag.Utente.Ruolo == "Manager")
+										{
+										<a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
 								<i class="bi bi-trash"></i> Elimina
-							</a>
+							</a>										
+										}
 						</td>
 					</tr>
 				}
@@ -102,38 +104,21 @@
 	</div>
 </div>
 
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div id="testoDelModal"class="modal-body">
-                Sei sicuro di voler eliminare questo ticket?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <form id="deleteForm" method="post" asp-action="DeleteConfirmed">
-                    <input type="hidden" name="id" id="deleteId">
-                    <button type="submit" class="btn btn-danger">Elimina</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
-    $(document).ready(function () {
+	$(document).ready(function () {
         $('.deleteButton').click(function (e) {
             e.preventDefault();
+
             var id = $(this).data('id');
+
 
             $('#testoDelModal').text('Sei sicuro di voler eliminare il ticket #' + id + ' ?');
 
             $('#deleteId').val(id);
 
             $('#confirmDeleteModal').modal('show');
+
         });
     });
 </script>
