@@ -70,6 +70,7 @@ namespace InDaCompany.Controllers
         {
             return RedirectToAction("Create", "Ticket");
         }
+
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
