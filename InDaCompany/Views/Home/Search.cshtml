@@ -1,0 +1,74 @@
+﻿@model SearchResultViewModel
+
+<div class="container mt-4">
+    <h2>Risultati della ricerca per: "@Model.SearchTerm"</h2>
+
+    @if (!Model.Threads.Any() && !Model.Tickets.Any() && !Model.Forums.Any())
+    {
+        <div class="alert alert-info">
+            <i class="ti ti-info-circle me-2"></i>Nessun risultato trovato.
+        </div>
+    }
+    else
+    {
+        @if (Model.Threads.Any())
+        {
+            <h3 class="mt-4">Thread</h3>
+            <div class="thread-list">
+                @foreach (var thread in Model.Threads)
+                {
+                    <partial name="_ThreadCard" model="thread" />
+                }
+            </div>
+        }
+
+        @if (Model.Tickets.Any())
+        {
+            <h3 class="mt-4">Ticket</h3>
+            <div class="ticket-list">
+                @foreach (var ticket in Model.Tickets)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a asp-controller="Ticket" asp-action="Edit" asp-route-id="@ticket.ID" class="text-decoration-none">
+                                    <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
+                                </a>
+                                <span class="badge bg-@(ticket.Stato switch {
+                                    "Aperto" => "danger",
+                                    "In lavorazione" => "warning",
+                                    "Chiuso" => "success",
+                                    _ => "secondary"
+                                })">@ticket.Stato</span>
+                            </div>
+                            <p class="mt-2">@ticket.Descrizione</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.Forums.Any())
+        {
+            <h3 class="mt-4">Forum</h3>
+            <div class="forum-list">
+                @foreach (var forum in Model.Forums)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a asp-controller="Forum" asp-action="Index" asp-route-forumId="@forum.ID">
+                                    @forum.Nome
+                                </a>
+                            </h5>
+                            @if (!string.IsNullOrEmpty(forum.Descrizione))
+                            {
+                                <p class="card-text">@forum.Descrizione</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

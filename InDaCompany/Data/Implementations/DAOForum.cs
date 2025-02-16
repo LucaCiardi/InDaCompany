@@ -149,6 +149,28 @@ namespace InDaCompany.Data.Implementations
 
             return await ExistsAsync(query, parameters);
         }
+        public async Task<List<Forum>> SearchAsync(string searchTerm)
+        {
+            const string query = @"
+        SELECT ID, Nome, Descrizione, Team 
+        FROM Forum 
+        WHERE Nome LIKE @SearchTerm 
+           OR Descrizione LIKE @SearchTerm
+        ORDER BY Nome";
+
+            var parameters = new[] {
+        new SqlParameter("@SearchTerm", $"%{searchTerm}%")
+    };
+
+            try
+            {
+                return await ExecuteQueryListAsync(query, parameters);
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException("Errore durante la ricerca dei forum", ex);
+            }
+        }
 
         protected override Forum MapFromReader(SqlDataReader reader)
         {
