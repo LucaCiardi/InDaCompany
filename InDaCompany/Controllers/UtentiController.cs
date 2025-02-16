@@ -238,7 +238,6 @@ namespace InDaCompany.Controllers
             }
             return View(model);
         }
-
         [HttpPost]
             [ValidateAntiForgeryToken]
             [AllowAnonymous]

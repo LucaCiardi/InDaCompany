@@ -194,9 +194,10 @@ namespace InDaCompany.Data.Implementations
         public async Task<Utente?> AuthenticateAsync(string email, string password)
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione
-                FROM Utenti 
-                WHERE Email = @Email AND PasswordHash = @Password";
+    SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo
+    FROM Utenti 
+    WHERE Email = @Email AND PasswordHash = @Password";
+
 
             var parameters = new[]
             {
