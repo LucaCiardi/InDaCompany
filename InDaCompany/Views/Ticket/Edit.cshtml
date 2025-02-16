@@ -24,7 +24,12 @@
                     <textarea asp-for="Descrizione" class="form-control" rows="3" required></textarea>
                     <span asp-validation-for="Descrizione" class="text-danger"></span>
                 </div>
-
+                <div class="form-group mb-3">
+                    <label asp-for="Soluzione" class="control-label">Soluzione</label>
+                    <textarea asp-for="Soluzione" class="form-control" rows="3" id="soluzioneField"></textarea>
+                    <span asp-validation-for="Soluzione" class="text-danger"></span>
+                    <small class="text-muted">Richiesta se il ticket viene chiuso</small>
+                </div>
                 <div class="form-group mb-3">
                     <label asp-for="DataApertura" class="control-label">Data Apertura</label>
                     <input asp-for="DataApertura" class="form-control" readonly />
@@ -32,7 +37,7 @@
 
                 <div class="form-group mb-4">
                     <label asp-for="Stato" class="control-label">Stato</label>
-                    <select asp-for="Stato" class="form-select" required>
+                    <select asp-for="Stato" class="form-select" required onchange="checkSoluzione(this.value)">
                         <option value="Aperto">Aperto</option>
                         <option value="In lavorazione">In lavorazione</option>
                         <option value="Chiuso">Chiuso</option>
@@ -72,4 +77,21 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        function checkSoluzione(stato) {
+            const soluzioneField = document.getElementById('soluzioneField');
+            if (stato === 'Chiuso') {
+                soluzioneField.required = true;
+                soluzioneField.closest('.form-group').style.display = 'block';
+            } else {
+                soluzioneField.required = false;
+                soluzioneField.closest('.form-group').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSoluzione(document.querySelector('[name="Stato"]').value);
+        });
+    </script>
 }
+
