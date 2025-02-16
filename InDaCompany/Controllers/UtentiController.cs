@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using InDaCompany.Data.Implementations;
+using InDaCompany.ViewModels;
 
 namespace InDaCompany.Controllers
 {
@@ -171,7 +172,7 @@ namespace InDaCompany.Controllers
             catch (DAOException ex)
             {
                 _logger.LogError(ex, "Errore durante la verifica di altri amministratori");
-                return true; // Safe default
+                return true;
             }
         }
 
@@ -264,7 +265,7 @@ namespace InDaCompany.Controllers
                     return Json(new { success = false, message = "Formato file non supportato" });
                 }
 
-                if (model.Foto.Length > 2 * 1024 * 1024) // 2MB limit
+                if (model.Foto.Length > 2 * 1024 * 1024) 
                 {
                     return Json(new { success = false, message = "L'immagine non può superare i 2MB" });
                 }
