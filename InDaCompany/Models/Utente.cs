@@ -31,6 +31,7 @@ namespace InDaCompany.Models
 
         [StringLength(50, ErrorMessage = "Il Team non può superare i 50 caratteri")]
         public string? Team { get; set; }
+        public byte[]? FotoProfilo { get; set; }
 
         public DateTime DataCreazione { get; set; } = DateTime.Now;
 
