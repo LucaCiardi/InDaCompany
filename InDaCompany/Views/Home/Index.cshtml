@@ -46,8 +46,16 @@
                                 <div class="card mb-3 shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
-                                            <span class="badge bg-indigo">@ticket.Stato</span>
+                                            <a asp-controller="Ticket" asp-action="Edit" asp-route-id="@ticket.ID" class="text-decoration-none">
+                                                <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
+                                            </a>
+                                            <span class="badge bg-@(ticket.Stato switch {
+                                                "Aperto" => "danger",
+                                                "In lavorazione" => "warning",
+                                                "Chiuso" => "success",
+                                                _ => "secondary"
+                                            })">@ticket.Stato
+                                            </span>
                                         </div>
                                         <p class="mt-3">@ticket.Descrizione</p>
                                         <small class="text-muted">
