@@ -6,10 +6,12 @@
     PasswordHash VARCHAR(128) NOT NULL,
     Ruolo VARCHAR(20) NOT NULL,
     Team VARCHAR(50) NULL,
+    FotoProfilo VARBINARY(MAX) NULL, 
     DataCreazione DATETIME DEFAULT GETDATE(),
     CONSTRAINT UC_Email UNIQUE (Email),
     CONSTRAINT CHK_Ruolo CHECK (Ruolo IN ('Dipendente', 'Manager', 'Admin'))
 );
+
 
 CREATE TABLE Forum (
     ID INT IDENTITY PRIMARY KEY,
@@ -23,7 +25,7 @@ CREATE TABLE ThreadForum (
     ID INT IDENTITY PRIMARY KEY,
     Titolo NVARCHAR(255) NOT NULL,
     Testo NVARCHAR(MAX) NULL,
-    ImmaginePath VARCHAR(255) NULL, 
+    Immagine VARBINARY(MAX) NULL, 
     ForumID INT NOT NULL,
     AutoreID INT NOT NULL,
     DataCreazione DATETIME DEFAULT GETDATE(),
