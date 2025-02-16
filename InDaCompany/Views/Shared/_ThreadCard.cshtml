@@ -7,15 +7,42 @@
     </div>
 
     <div class="card-body">
+
         @if (Model.Immagine != null)
         {
             <img src="@Url.Action("GetImage", "ThreadForum", new { id = Model.ID })"
-                 alt="Immagine Thread"
-                 class="img-fluid mb-3 rounded mx-auto d-block" />
+                    alt="Immagine Thread"
+                    class="img-fluid mb-3 rounded mx-auto d-block" />
         }
 
         <p class="card-text">@Model.Testo</p>
     </div>
+
+            <div class="card-body">
+
+                @if (Model.Messages != null && Model.Messages.Any())
+                {
+                @foreach (MessaggioThread commento in Model.Messages)
+                    {
+                    var utenti = (List<Utente>) ViewBag.Utenti;
+                    var infoUtente = utenti.Where(u => u.ID == commento.AutoreID)
+                    .Select(u => new { NomeECognome = u.Nome + " " + u.Cognome, Email = u.Email })
+                    .FirstOrDefault();
+                <div class="d-flex align-items-center justify-content-between">
+                    <p class="fw-bold mb-0">@infoUtente.NomeECognome</p>
+                    <p class="text-muted small mb-0">@commento.DataFormattata</p>
+                </div>
+                <p class="card-text">@commento.Testo</p>
+                    }
+                }
+                else
+                {
+                    <p class="card-text fst-italic">Commenta per primo!</p>
+                }
+
+            </div>
+
+
 
     <div class="card-footer">
         <div class="d-flex justify-content-between align-items-center mb-3">

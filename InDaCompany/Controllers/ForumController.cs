@@ -12,22 +12,25 @@ namespace InDaCompany.Controllers
         private readonly IDAOMessaggiThread _daoMessaggiThread;
         private readonly IDAOThreadForum _daoThreadForum;
         private readonly IDAOForum _daoForum;
+        private readonly IDAOUtenti _daoUtenti;
         private readonly ILogger<ForumController> _logger;
 
         public ForumController(
     ILogger<ForumController> logger,
     IDAOForum daoForum,
     IDAOThreadForum daoThreadForum,
-    IDAOMessaggiThread daoMessaggiThread)
+    IDAOMessaggiThread daoMessaggiThread,
+    IDAOUtenti daoUtenti)
     : base(logger)
         {
             _daoForum = daoForum;
             _daoThreadForum = daoThreadForum;
             _daoMessaggiThread = daoMessaggiThread;
+            _daoUtenti = daoUtenti;
             _logger = logger;
         }
 
-
+        [HttpGet("Forum")]
         public async Task<IActionResult> Index()
         {
             try
@@ -37,12 +40,21 @@ namespace InDaCompany.Controllers
                 var threads = await _daoThreadForum.GetAllAsync();
                 var messages = await _daoMessaggiThread.GetAllAsync();
 
+                Console.WriteLine("passato di SU per debug");
+
+
+                foreach (var thread in threads)
+                {
+                    thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
+                }
+
                 var model = new ForumViewModel
                 {
                     Forums = forums ?? new List<Forum>(),
                     Threads = threads ?? new List<ThreadForum>(),
                     Messages = messages ?? new List<MessaggioThread>()
                 };
+                ViewBag.Utenti = await _daoUtenti.GetAllAsync();
                 return View(model);
             }
             catch (Exception ex)
@@ -51,6 +63,42 @@ namespace InDaCompany.Controllers
                 return HandleException(ex);
             }
         }
+
+        [HttpGet("Index/{forumId}")]
+        public async Task<IActionResult> Index(int forumId)
+        {
+            try
+            {
+                _logger.LogInformation("Accessing home page");
+                var forums = await _daoForum.GetAllAsync();
+                var threads = await _daoThreadForum.GetThreadsByForumAsync(forumId);
+                var messages = await _daoMessaggiThread.GetAllAsync();
+
+                Console.WriteLine("passato di GIU per debug");
+
+                foreach (var thread in threads)
+                {
+                    thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
+                }
+
+                var model = new ForumViewModel
+                {
+                    Forums = forums ?? new List<Forum>(),
+                    Threads = threads ?? new List<ThreadForum>(),
+                    Messages = messages ?? new List<MessaggioThread>()
+                };
+                ViewBag.Utenti = await _daoUtenti.GetAllAsync();
+                var selectedForum = await _daoForum.GetByIdAsync(forumId);
+                ViewBag.NomeForum = selectedForum.NomeCompleto;
+                return View("~/Views/Forum/Index.cshtml", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving forums");
+                return HandleException(ex);
+            }
+        }
+
 
         public IActionResult Create()
         {
