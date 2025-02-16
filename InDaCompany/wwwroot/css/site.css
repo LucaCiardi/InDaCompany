@@ -230,3 +230,8 @@ body{
         background-color: rgb(141, 65, 195);
         border-color: indigo;
     }
+.img-fluid {
+    max-height: 400px; 
+    width: auto;
+    object-fit: contain;
+}
