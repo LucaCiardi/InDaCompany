@@ -17,6 +17,18 @@ public class DAOTicket : DAOBase<Ticket>, IDAOTicket
 
         return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
     }
+    public async Task<List<Ticket>> GetByTeamAsync(string team)
+    {
+        const string query = @"
+        SELECT t.* 
+        FROM Ticket t
+        INNER JOIN Utenti u ON t.AssegnatoAID = u.ID
+        WHERE u.Team = @Team
+        ORDER BY t.DataApertura DESC";
+
+        var parameters = new[] { new SqlParameter("@Team", team) };
+        return await ExecuteQueryListAsync(query, parameters);
+    }
 
 
     public async Task<Ticket?> GetByIdAsync(int id)

@@ -7,7 +7,7 @@ namespace InDaCompany.Models
         public List<MessaggioThread> Messages { get; set; } = [];
         public List<ThreadForum> ThreadForums { get; set; } = [];
         public List<Ticket> Tickets { get; set; } = [];
-
+        public Dictionary<int, ThreadForum> MessageThreads { get; set; } = [];
         public int TotalMessages => Messages.Count;
         public int TotalThreads => ThreadForums.Count;
         public int TotalTickets => Tickets.Count;

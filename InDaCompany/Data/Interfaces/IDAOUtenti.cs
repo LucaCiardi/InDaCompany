@@ -10,5 +10,7 @@ namespace InDaCompany.Data.Interfaces
         Task<bool> ChangePasswordAsync(int userId, string newPasswordHash);
         Task UpdateProfilePictureAsync(int userId, byte[] imageData);
         Task SetDefaultProfilePictureAsync(int userId);
+        Task<List<Utente>> GetByTeamAsync(string team);
+
     }
 }

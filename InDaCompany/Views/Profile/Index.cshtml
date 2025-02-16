@@ -80,28 +80,28 @@
         </div>
 
             <!-- Sezione Commenti -->
-            <div id="content-comments" class="content-section d-none">
-                @if (Model.Messages?.Any() == true)
+        <div id="content-comments" class="content-section d-none">
+            @if (Model.Messages?.Any() == true)
+            {
+                var displayedThreads = new HashSet<int>(); 
+
+                @foreach (var message in Model.Messages)
                 {
-                    foreach (var message in Model.Messages)
+                    @if (Model.MessageThreads.TryGetValue(message.ThreadID, out var thread)
+                   && !displayedThreads.Contains(thread.ID))
                     {
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-body">
-                                <p class="mb-2">@message.Testo</p>
-                                <small class="text-muted">
-                                    @message.DataCreazione.ToString("dd/MM/yyyy HH:mm")
-                                </small>
-                            </div>
-                        </div>
+                        displayedThreads.Add(thread.ID);
+                        <partial name="_ThreadCard" model="thread" />
                     }
                 }
-                else
-                {
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>Nessun commento.
-                    </div>
-                }
-            </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="ti ti-info-circle me-2"></i>Nessun commento.
+                </div>
+            }
+        </div>
 
             <!-- Sezione Mi Piace -->
             <div id="content-liked" class="content-section d-none">
@@ -111,16 +111,26 @@
             </div>
 
             <!-- Sezione Ticket -->
-            <div id="content-tickets" class="content-section d-none">
-                @if (Model.Tickets?.Any() == true)
-                {
-                    foreach (var ticket in Model.Tickets)
+        <div id="content-tickets" class="content-section d-none">
+            @if (Model.Tickets?.Any() == true)
+            {
+                <div class="list-group">
+                    @foreach (var ticket in Model.Tickets)
                     {
                         <div class="card mb-3 shadow-sm">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
-                                    <span class="badge bg-indigo">@ticket.Stato</span>
+                                    <a asp-controller="Ticket" asp-action="Edit" asp-route-id="@ticket.ID" class="text-decoration-none">
+                                        <h5 class="text-indigo mb-0">@ticket.Titolo</h5>
+                                    </a>
+                                    <span class="badge bg-@(ticket.Stato switch {
+                                "Aperto" => "danger",
+                                "In lavorazione" => "warning",
+                                "Chiuso" => "success",
+                                _ => "secondary"
+                            })">
+                                        @ticket.Stato
+                                    </span>
                                 </div>
                                 <p class="mt-3">@ticket.Descrizione</p>
                                 <small class="text-muted">
@@ -129,14 +139,15 @@
                             </div>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>Nessun ticket.
-                    </div>
-                }
-            </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="ti ti-info-circle me-2"></i>Nessun ticket.
+                </div>
+            }
+        </div>
         </div>
 
         <!-- Sidebar -->

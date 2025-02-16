@@ -6,5 +6,7 @@ namespace InDaCompany.Data.Interfaces
     {
         Task<List<ThreadForum>> GetThreadsByForumAsync(int forumID);
         Task<List<ThreadForum>> GetThreadsByAuthorAsync(int authorID);
+        Task<List<ThreadForum>> SearchThreadsAsync(string searchTerm);
+
     }
 }

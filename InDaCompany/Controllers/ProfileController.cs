@@ -15,13 +15,15 @@ namespace InDaCompany.Controllers
         private readonly IDAOForum _daoForum;
         private readonly IDAOThreadForum _daoThreadForum;
         private readonly ILogger<ProfileController> _logger;
+        private readonly IDAOMessaggiThread _daoMessaggiThread;
 
         public ProfileController(
             ILogger<ProfileController> logger,
             IDAOUtenti daoUtenti,
             IDAOTicket daoTicket,
             IDAOForum daoForum,
-            IDAOThreadForum daoThreadForum)
+            IDAOThreadForum daoThreadForum,
+        IDAOMessaggiThread daoMessaggiThread)
             : base(logger)
         {
             _daoUtenti = daoUtenti;
@@ -29,6 +31,7 @@ namespace InDaCompany.Controllers
             _daoForum = daoForum;
             _daoThreadForum = daoThreadForum;
             _logger = logger;
+            _daoMessaggiThread = daoMessaggiThread;
         }
         public async Task<IActionResult> Index()
         {
@@ -43,17 +46,45 @@ namespace InDaCompany.Controllers
                     return NotFound();
                 }
 
+                // Get all user's data
                 var ticketsByAuthor = await _daoTicket.GetByCreatoDaIDAsync(userId);
                 var threadsByAuthor = await _daoThreadForum.GetThreadsByAuthorAsync(userId);
                 var forumsOfAuthor = await _daoForum.GetForumByUser(user.Email);
+                var messages = await _daoMessaggiThread.GetMessagesByAuthorAsync(userId);
+
+                // Load messages for each thread
+                foreach (var thread in threadsByAuthor)
+                {
+                    thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
+                }
+
+                // Load messages for threads where the user commented
+                var messageThreadIds = messages.Select(m => m.ThreadID).Distinct();
+                var messageThreads = await Task.WhenAll(
+                    messageThreadIds.Select(async id => {
+                        var thread = await _daoThreadForum.GetByIdAsync(id);
+                        if (thread != null)
+                        {
+                            thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
+                        }
+                        return thread;
+                    })
+                );
 
                 var profileModel = new ProfileViewModel
                 {
                     Utente = user,
                     Tickets = ticketsByAuthor,
                     Forums = forumsOfAuthor,
-                    ThreadForums = threadsByAuthor
+                    ThreadForums = threadsByAuthor,
+                    Messages = messages,
+                    MessageThreads = messageThreads
+                        .Where(t => t != null)
+                        .ToDictionary(t => t.ID)
                 };
+
+                // Add users for displaying names in comments
+                ViewBag.Utenti = await _daoUtenti.GetAllAsync();
 
                 _logger.LogInformation("Profilo recuperato con successo per l'utente: {UserId}", userId);
                 return View(profileModel);
@@ -64,7 +95,6 @@ namespace InDaCompany.Controllers
                 return HandleException(ex);
             }
         }
-
         [HttpGet]
         public IActionResult CreateTicket()
         {

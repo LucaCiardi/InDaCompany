@@ -93,5 +93,20 @@ public class HomeController : BaseController
         }
         return userId;
     }
+    [HttpGet]
+    public async Task<IActionResult> Search(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return RedirectToAction("Index");
 
+        var searchResults = new SearchResultViewModel
+        {
+            SearchTerm = searchTerm,
+            Threads = await _daoThreadForum.SearchThreadsAsync(searchTerm),
+            Tickets = await _daoTicket.SearchAsync(searchTerm),
+            Forums = await _daoForum.SearchAsync(searchTerm)
+        };
+
+        return View(searchResults);
+    }
 }

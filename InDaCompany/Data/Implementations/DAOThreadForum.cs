@@ -155,6 +155,27 @@ WHERE ID = @ID
         var parameters = new[] { new SqlParameter("@ID", id) };
         return await ExistsAsync(query, parameters);
     }
+    public async Task<List<ThreadForum>> SearchThreadsAsync(string searchTerm)
+    {
+        const string query = @"
+        SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine 
+        FROM ThreadForum 
+        WHERE Titolo LIKE @SearchTerm OR Testo LIKE @SearchTerm
+        ORDER BY DataCreazione DESC";
+
+        var parameters = new[] {
+        new SqlParameter("@SearchTerm", $"%{searchTerm}%")
+    };
+
+        try
+        {
+            return await ExecuteQueryListAsync(query, parameters);
+        }
+        catch (SqlException ex)
+        {
+            throw new DAOException("Errore durante la ricerca dei thread", ex);
+        }
+    }
 
     protected override ThreadForum MapFromReader(SqlDataReader reader)
     {
