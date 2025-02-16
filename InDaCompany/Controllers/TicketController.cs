@@ -86,28 +86,31 @@ namespace InDaCompany.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Titolo,Descrizione,Stato,AssegnatoAID")] Ticket ticket)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Titolo,Descrizione,Stato,AssegnatoAID,Soluzione")] Ticket ticket)
         {
-            if (id != ticket.ID)
-            {
-                return NotFound();
-            }
+            if (id != ticket.ID) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var originalTicket = await _daoTicket.GetByIdAsync(ticket.ID);
-                    if (originalTicket == null)
-                    {
-                        return NotFound();
-                    }
+                    if (originalTicket == null) return NotFound();
 
                     ticket.DataApertura = originalTicket.DataApertura;
                     ticket.CreatoDaID = originalTicket.CreatoDaID;
 
+                    if (ticket.Stato == "Chiuso")
+                    {
+                        if (string.IsNullOrEmpty(ticket.Soluzione))
+                        {
+                            ModelState.AddModelError("Soluzione", "La soluzione è obbligatoria per i ticket chiusi");
+                            return View(ticket);
+                        }
+                        ticket.DataChiusura = DateTime.Now;
+                    }
+
                     await _daoTicket.UpdateAsync(ticket);
-                    _logger.LogInformation("Ticket aggiornato con successo: {Id}", ticket.ID);
                     TempData["Success"] = "Ticket modificato con successo";
                     return RedirectToAction(nameof(Index));
                 }
@@ -119,6 +122,7 @@ namespace InDaCompany.Controllers
             }
             return View(ticket);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
@@ -140,30 +144,24 @@ namespace InDaCompany.Controllers
             }
         }
 
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
-                var ticket = await _daoTicket.GetByIdAsync(id);
-                if (ticket == null)
-                {
-                    return NotFound();
-                }
-
                 await _daoTicket.DeleteAsync(id);
-                _logger.LogInformation("Ticket eliminato con successo: {Id}", id);
                 TempData["Success"] = "Ticket eliminato con successo";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DAOException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore durante l'eliminazione del ticket: {Id}", id);
+                _logger.LogError(ex, "Error deleting ticket: {Id}", id);
                 TempData["Error"] = "Errore durante l'eliminazione del ticket";
                 return RedirectToAction(nameof(Index));
             }
         }
+
         [HttpGet]
         public async Task<IActionResult> ByCreator(int creatorId)
         {
@@ -239,4 +237,5 @@ namespace InDaCompany.Controllers
             return userId;
         }
     }
+
 }

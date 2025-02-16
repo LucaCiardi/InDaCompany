@@ -1,154 +1,197 @@
-@model IEnumerable<InDaCompany.Models.Ticket>
+<div class="container-fluid">
+	<div class="card shadow-sm mb-4">
+		<div class="card-header text-center">
+			<h4 class="mb-0"><i class="bi bi-ticket-detailed me-2"></i>Ticket System</h4>
+		</div>
+		<div class="card-body">
+			<table class="table table-bordered" id="table-container">
+				<thead>
+		<tr>
+			<th>ID</th>
+			<th>Utente</th>
+			<th>Titolo</th>
+			<th>Descrizione</th>
+			<th>Soluzione</th>
+			<th>Stato</th>
+			<th>Data Apertura</th>
+			<th>Data Chiusura</th>
+			<th>Azioni</th>
+		</tr>
+	</thead>
+	<tbody>
+		@if (Model != null)
+		{
+			@foreach (var item in Model)
+			{
+				@if (item != null)
+				{
+					<tr>
+						<td>@item.ID</td>
+						<td>@item.CreatoDaID</td>
+						<td class="truncate">@item.Titolo</td>
+						<td class="truncate">@item.Descrizione</td>
+						<td class="truncate">
+							@if (item.Stato == "Chiuso")
+							{
+								@item.Soluzione
+							}
+							else
+							{
+								<span class="text-muted">-</span>
+							}
+						</td>
+						<td>
+							<span class="badge bg-@(item.Stato switch {
+                            "Aperto" => "danger",
+                            "In lavorazione" => "warning",
+                            "Chiuso" => "success",
+                            _ => "secondary"
+                        })">@item.StatoDisplay</span>
+						</td>
+						<td>@item.DataApertura.ToString("dd/MM/yyyy HH:mm")</td>
+						<td>
+							@if (item?.DataChiusura != null)
+							{
+								@item.DataChiusura.ToString("dd/MM/yyyy HH:mm")
+							}
+							else
+							{
+								<span class="text-muted">-</span>
+							}
+						</td>
 
-@{
-    ViewData["Title"] = "Ticket";
-}
 
-<div class="text-center mb-5">
-    <h2 class="display-4 text-indigo">
-        <i class="bi bi-ticket-detailed"></i> Ticket System
-    </h2>
+						<td>
+							<a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
+								<i class="bi bi-pencil"></i> Modifica
+							</a>
+
+							<a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
+								<i class="bi bi-trash"></i> Elimina
+							</a>
+						</td>
+					</tr>
+				}
+			}
+		}
+	</tbody>
+			</table>
+		</div>
+	</div>
 </div>
-
-<div class="row-md">
-    <form asp-action="Search" method="get" class="d-flex me-3 mb-3">
-        <input type="search" name="searchBar" class="form-control me-2 search-box" 
-               placeholder="Cerca..." aria-label="Cerca">
-        <button class="btn btn-indigo" type="submit">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-</div>
-
-<table class="table table-bordered" id="table-container">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Utente</th>
-            <th>Titolo</th>
-            <th>Descrizione</th>
-            <th>Stato</th>
-            <th>Data Apertura</th>
-            <th>Azioni</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.ID</td>
-                <td>@item.CreatoDaID</td>
-                <td>@item.Titolo</td>
-                <td>@item.Descrizione</td>
-                <td>
-                    <span class="badge bg-@(item.Stato switch {
-                        "Aperto" => "danger",
-                        "In lavorazione" => "warning",
-                        "Chiuso" => "success",
-                        _ => "secondary"
-                    })">@item.Stato</span>
-                </td>
-                <td>@item.DataApertura.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm" id="btn-indigo">
-                        <i class="bi bi-pencil"></i> Modifica
-                    </a>
-
-                    <a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@item.ID">
-                        <i class="bi bi-trash"></i> Elimina
-                    </a>
-                </td>
-
-            </tr>
-        }
-    </tbody>
-</table>
-
-<!-- Modal di conferma eliminazione -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" 
-     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div id="testoDelModal" class="modal-body">
-                Sei sicuro di voler eliminare questo ticket?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <form id="deleteForm" method="post" asp-action="DeleteConfirmed">
-                    <input type="hidden" name="id" id="deleteId">
-                    <button type="submit" class="btn btn-danger">Elimina</button>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1"
+	 aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div id="testoDelModal" class="modal-body">
+				Sei sicuro di voler eliminare questo ticket?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+				<form id="deleteForm" method="post" asp-action="DeleteConfirmed">
+					<input type="hidden" name="id" id="deleteId">
+					<button type="submit" class="btn btn-danger">Elimina</button>
+				</form>
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
-    .text-indigo {
-        color: indigo;
-    }
+	#btn-indigo {
+		color: #fff;
+		background-color: indigo;
+		border-color: indigo;
+	}
 
-    .btn-indigo {
-        color: #fff;
-        background-color: indigo;
-        border-color: indigo;
-    }
+		#btn-indigo:hover {
+			color: #fff;
+			background-color: rgb(141, 65, 195);
+			border-color: indigo;
+		}
 
-    .btn-indigo:hover {
-        color: #fff;
-        background-color: rgb(141, 65, 195);
-        border-color: indigo;
-    }
+	#table-container {
+		width: 100%;
+		table-layout: fixed;
+	}
 
-    #table-container {
-        border: 1px solid indigo;
-    }
+		#table-container th, #table-container td {
+			padding: 12px;
+			vertical-align: middle;
+			word-wrap: break-word;
+		}
 
-    .table th {
-        background-color: indigo;
-        color: white;
-    }
+			#table-container th:nth-child(1) {
+				width: 4%;
+			}
+			#table-container th:nth-child(2) {
+				width: 7%;
+			}
+			#table-container th:nth-child(3) {
+				width: 12%;
+			}
+			#table-container th:nth-child(4) {
+				width: 13%;
+			}
+			#table-container th:nth-child(5) {
+				width: 13%;
+			}
+			#table-container th:nth-child(6) {
+				width: 12%;
+			}
+			#table-container th:nth-child(7) {
+				width: 11%;
+			}
+			#table-container th:nth-child(8) {
+				width: 11%;
+			}
+			#table-container th:nth-child(9) {
+				width: 17%;
+			}
 
-    .badge {
-        font-size: 0.9em;
-        padding: 0.5em 0.7em;
-    }
+	.truncate {
+		max-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
-    #btn-indigo, .btn-indigo {
-        color: #fff;
-        background-color: indigo;
-        border-color: indigo;
-    }
+	.card {
+		border-radius: 0.5rem;
+	}
 
-        #btn-indigo:hover, .btn-indigo:hover {
-            color: #fff;
-            background-color: rgb(141, 65, 195);
-            border-color: indigo;
-        }
+	.card-header {
+		background-color: white;
+		border-bottom: 1px solid rgba(0,0,0,.125);
+	}
+
+	.container-fluid {
+		padding: 20px;
+	}
+
 
 </style>
-
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.deleteButton');
-            const deleteIdInput = document.getElementById('deleteId');
-            const modalText = document.getElementById('testoDelModal');
-            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const deleteButtons = document.querySelectorAll('.deleteButton');
+			const deleteIdInput = document.getElementById('deleteId');
+			const modalText = document.getElementById('testoDelModal');
+			const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
 
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const id = this.getAttribute('data-id');
-                    modalText.textContent = 'Sei sicuro di voler eliminare il ticket #' + id + ' ?';
-                    deleteIdInput.value = id;
-                    modal.show();
-                });
-            });
-        });
-    </script>
+			deleteButtons.forEach(button => {
+				button.addEventListener('click', function(e) {
+					e.preventDefault();
+					const id = this.getAttribute('data-id');
+					modalText.textContent = 'Sei sicuro di voler eliminare il ticket #' + id + ' ?';
+					deleteIdInput.value = id;
+					modal.show();
+				});
+			});
+		});
+	</script>
 }

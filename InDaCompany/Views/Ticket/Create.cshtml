@@ -11,7 +11,7 @@
         <div class="col-md-6">
             <form asp-action="Create" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                
+
                 <div class="form-group mb-3">
                     <label asp-for="Titolo" class="control-label">Titolo</label>
                     <input asp-for="Titolo" class="form-control" required />
@@ -23,11 +23,21 @@
                     <textarea asp-for="Descrizione" class="form-control" rows="3" required></textarea>
                     <span asp-validation-for="Descrizione" class="text-danger"></span>
                 </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Stato" class="control-label">Stato</label>
+                    <select asp-for="Stato" class="form-select" required>
+                        <option value="Aperto" selected>Aperto</option>
+                        <option value="In lavorazione">In lavorazione</option>
+                    </select>
+                    <span asp-validation-for="Stato" class="text-danger"></span>
+                </div>
+
                 <div class="form-group mt-4">
-                    <button type="submit" class="btn btn-sm" id="btn-indigo">
+                    <button type="submit" class="btn btn-sm btn-indigo">
                         <i class="bi bi-save me-2"></i> Crea
                     </button>
-                    <a asp-action="Index" class="btn btn-sm" id="btn-indigo">
+                    <a asp-action="Index" class="btn btn-sm btn-indigo">
                         <i class="bi bi-arrow-left me-2"></i> Torna all'elenco
                     </a>
                 </div>
@@ -37,14 +47,14 @@
 </div>
 
 <style>
-    #btn-indigo {
+    .btn-indigo {
         margin-top: 0.75rem;
         color: #fff;
         background-color: indigo;
         border-color: indigo;
     }
 
-        #btn-indigo:hover {
+        .btn-indigo:hover {
             color: #fff;
             background-color: rgb(141, 65, 195);
             border-color: indigo;
