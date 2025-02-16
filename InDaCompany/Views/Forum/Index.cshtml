@@ -2,31 +2,52 @@
 @{
     ViewData["Title"] = "Forum";
 }
-
+<!-- Sidebar -->
 <div class="container mt-4">
-    <h1 class="forum-title">Forum Team @Model.Forums?.FirstOrDefault()?.Team</h1>
+    <div class="row">
 
-    <a asp-controller="ThreadForum" asp-action="Create"
-       asp-route-forumId="@Model.Forums?.FirstOrDefault()?.ID"
-       class="btn btn-indigo my-3 rounded-pill">
-        <i class="ti ti-plus me-2"></i>Nuovo Thread
-    </a>
+        <div class="col-md-2" id="sidebar">
+            <div class="card mb-4 h-100">
+                <div class="list-group">
+                    <a asp-action="Index" asp-route-forumId="" class="nav-link active">Tutti</a>
+                    @foreach (Forum forum in Model.Forums)
+                    {
+                        <a asp-controller="Forum" asp-action="Index" asp-route-forumId="@forum.ID" class="nav-link">@forum.Nome</a>
+                    }
+                </div>
+            </div>
+        </div>
 
-    @if (Model.Threads?.Any() == true)
-    {
-        <div class="thread-list">
-            @foreach (var thread in Model.Threads)
+
+    <div class="col-8">
+        @{
+            var nomeForum = ViewBag.NomeForum == null ? "Tutti i thread" : ViewBag.NomeForum;
+        }
+            <h1 class="forum-title">@nomeForum</h1>
+
+            <a asp-controller="ThreadForum" asp-action="Create"
+               asp-route-forumId="@Model.Forums?.FirstOrDefault()?.ID"
+               class="btn btn-indigo my-3 rounded-pill">
+                <i class="ti ti-plus me-2"></i>Nuovo Thread
+            </a>
+
+            @if (Model.Threads?.Any() == true)
             {
-                <partial name="_ThreadCard" model="thread" />
+                <div class="thread-list">
+                    @foreach (var thread in Model.Threads)
+                    {
+                        <partial name="_ThreadCard" model="thread" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    Nessun thread disponibile in questo forum.
+                </div>
             }
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            Nessun thread disponibile in questo forum.
-        </div>
-    }
+    </div>
 </div>
 
 @section Scripts {
@@ -41,3 +62,16 @@
         });
     </script>
 }
+
+<style>
+
+    .nav-link {
+        color: indigo;
+    }
+
+        .nav-link.active {
+            background-color: indigo;
+            color: white;
+        }
+
+</style>

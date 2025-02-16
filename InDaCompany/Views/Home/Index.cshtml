@@ -7,7 +7,7 @@
     <!-- Sezione Welcome -->
     <div class="text-center d-flex justify-content-center align-items-center mb-4">
         <i class="ti ti-rectangle-vertical-filled" style="color: indigo; margin-right: 10px;"></i>
-        <h1 class="display-4" style="font-family: 'Playfair Display', serif; margin: 0;">Benvenuto</h1>
+        <h1 class="display-4" style="font-family: 'Playfair Display', serif; margin: 0;">Bacheca</h1>
         <i class="ti ti-rectangle-vertical-filled" style="color: indigo; margin-left: 10px;"></i>
     </div>
 
@@ -18,7 +18,24 @@
             {
                 foreach (var thread in Model.Threads)
                 {
-                    <partial name="_ThreadCard" model="thread" />
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">@thread.Titolo</h5>
+                            <small class="text-muted">@thread.DataCreazione.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+
+                        <div class="card-body">
+
+                            @if (thread.Immagine != null)
+                            {
+                                <img src="@Url.Action("GetImage", "ThreadForum", new { id = thread.ID })"
+                                     alt="Immagine Thread"
+                                     class="img-fluid mb-3 rounded mx-auto d-block" />
+                            }
+
+                            <p class="card-text">@thread.Testo</p>
+                        </div>
+                    </div>
                 }
             }
             else
@@ -74,7 +91,7 @@
                     </div>
                 </div>
             </div>
-
+            <br />
                 <!-- Sidebar Forum -->
             <div class="card shadow-sm">
                 <div class="card-header text-center">
@@ -89,7 +106,7 @@
                         <div class="list-group">
                             @foreach (var forum in Model.Forums)
                             {
-                                <a href="@Url.Action("Details", "Forum", new { id = forum.ID })"
+                                <a href="@Url.Action("Index", "Forum", new { forumId = forum.ID })"
                                    class="list-group-item list-group-item-action">
                                     @forum.Nome
                                 </a>

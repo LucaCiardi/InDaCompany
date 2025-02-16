@@ -11,17 +11,20 @@ public class HomeController : BaseController
     private readonly IDAOThreadForum _daoThreadForum;
     private readonly IDAOForum _daoForum;
     private readonly IDAOTicket _daoTicket;
+    private readonly IDAOMessaggiThread _daoMessaggiThread;
 
     public HomeController(
         ILogger<HomeController> logger,
         IDAOThreadForum daoThreadForum,
         IDAOForum daoForum,
-        IDAOTicket daoTicket)
+        IDAOTicket daoTicket,
+        IDAOMessaggiThread daoMessaggiThread)
         : base(logger)
     {
         _daoThreadForum = daoThreadForum;
         _daoForum = daoForum;
         _daoTicket = daoTicket;
+        _daoMessaggiThread = daoMessaggiThread;
     }
 
     public async Task<IActionResult> Index()
@@ -35,6 +38,11 @@ public class HomeController : BaseController
             var threads = await _daoThreadForum.GetAllAsync();
             var forums = await _daoForum.GetAllAsync();
             var tickets = await _daoTicket.GetByAssegnatoAIDAsync(userId);
+
+            foreach ( var thread in threads )
+            {
+                thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
+            }
 
             var model = new HomeViewModel
             {

@@ -12,15 +12,20 @@
     <link rel="stylesheet" href="~/InDaCompany.styles.css" asp-append-version="true" />
     <link href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@3.27.0/dist/tabler-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg">
+        <nav class="navbar navbar-expand-lg" style="background-color: indigo;">
             <div class="container-fluid">
-                <a class="navbar-brand text-white fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <i class="ti ti-home me-2"></i>InDaCompany
+                <a class="navbar-brand text-white fw-bold d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="ti ti-home me-2"></i>
+                    <div id="scritta-logo-prima-parte">
+                        InDaCo
+                    </div>
+                    <div>
+                        mpany
+                    </div>
                 </a>
                 @if (User?.Identity?.IsAuthenticated == true)
                 {
@@ -107,7 +112,6 @@
 <style>
     #scritta-logo-prima-parte {
         color: indigo;
-        /*             text-shadow: -4px 0px 0px white; /* Aggiunge una "ombra" per simulare il bordo */
         background-color: white;
         border-radius: 10px;
         padding: 0px 2px 0px 3px; /* top, right, bottom, left */
