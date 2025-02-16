@@ -11,21 +11,37 @@ namespace InDaCompany.Controllers
     {
         private readonly IDAOTicket _daoTicket;
         private readonly ILogger<TicketController> _logger;
+        private readonly IDAOUtenti _daoUtenti;
 
         public TicketController(
             ILogger<TicketController> logger,
-            IDAOTicket daoTicket)
+            IDAOTicket daoTicket,
+            IDAOUtenti daoUtenti)
             : base(logger)
         {
             _daoTicket = daoTicket;
             _logger = logger;
+            _daoUtenti = daoUtenti;
         }
+
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             try
             {
-                var tickets = await _daoTicket.GetAllAsync();
-                return View(tickets);
+                int userId = GetCurrentUserId();
+                var user = await _daoUtenti.GetByIdAsync(userId);
+                if (user.Ruolo == "Admin" || user.Ruolo == "Manager")
+                {
+                    var tickets = await _daoTicket.GetAllAsync();
+                    return View(tickets);
+                }
+                else
+                {
+                    var tickets = await _daoTicket.GetByAssegnatoAIDAsync(userId);
+                    tickets.Concat(await _daoTicket.GetByCreatoDaIDAsync(userId));
+                    return View(tickets);
+                }
             }
             catch (DAOException ex)
             {
@@ -70,12 +86,16 @@ namespace InDaCompany.Controllers
         {
             try
             {
+                int userId = GetCurrentUserId();
+                var user = await _daoUtenti.GetByIdAsync(userId);
+
                 var ticket = await _daoTicket.GetByIdAsync(id);
                 if (ticket == null)
                 {
                     _logger.LogWarning("Ticket non trovato: {Id}", id);
                     return NotFound();
                 }
+                ViewBag.InfoUtente = user;
                 return View(ticket);
             }
             catch (DAOException ex)

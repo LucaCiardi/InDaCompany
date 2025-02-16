@@ -40,9 +40,6 @@ namespace InDaCompany.Controllers
                 var threads = await _daoThreadForum.GetAllAsync();
                 var messages = await _daoMessaggiThread.GetAllAsync();
 
-                Console.WriteLine("passato di SU per debug");
-
-
                 foreach (var thread in threads)
                 {
                     thread.Messages = await _daoMessaggiThread.GetMessagesByThreadAsync(thread.ID);
@@ -73,8 +70,6 @@ namespace InDaCompany.Controllers
                 var forums = await _daoForum.GetAllAsync();
                 var threads = await _daoThreadForum.GetThreadsByForumAsync(forumId);
                 var messages = await _daoMessaggiThread.GetAllAsync();
-
-                Console.WriteLine("passato di GIU per debug");
 
                 foreach (var thread in threads)
                 {
