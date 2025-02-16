@@ -1,0 +1,81 @@
+﻿@model List<Utente>
+@Html.AntiForgeryToken()
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestione Utenti</h2>
+        <a asp-action="Create" class="btn btn-indigo">
+            <i class="ti ti-plus me-2"></i>Nuovo Utente
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Cognome</th>
+                    <th>Email</th>
+                    <th>Ruolo</th>
+                    <th>Team</th>
+                    <th>Data Creazione</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var utente in Model)
+                {
+                    <tr>
+                        <td>@utente.Nome</td>
+                        <td>@utente.Cognome</td>
+                        <td>@utente.Email</td>
+                        <td>@utente.Ruolo</td>
+                        <td>@(utente.Team ?? "-")</td>
+                        <td>@utente.DataCreazione.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@utente.ID"
+                                   class="btn btn-sm btn-outline-indigo">
+                                    <i class="ti ti-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                        onclick="confirmResetPassword(@utente.ID)">
+                                    <i class="ti ti-key"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmResetPassword(userId) {
+            if (confirm('Sei sicuro di voler resettare la password di questo utente?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("ResetPassword", "Utenti")';
+
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+                form.appendChild(idInput);
+
+                var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenElement) {
+                    var antiForgeryToken = document.createElement('input');
+                    antiForgeryToken.type = 'hidden';
+                    antiForgeryToken.name = '__RequestVerificationToken';
+                    antiForgeryToken.value = tokenElement.value;
+                    form.appendChild(antiForgeryToken);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

@@ -104,6 +104,7 @@ namespace InDaCompany.Data.Implementations
             SET Nome = @Nome,
                 Cognome = @Cognome,
                 Email = @Email,
+PasswordHash = @PasswordHash,
                 Ruolo = @Ruolo,
                 Team = @Team,
                 FotoProfilo = @FotoProfilo
@@ -115,6 +116,7 @@ namespace InDaCompany.Data.Implementations
             new SqlParameter("@Nome", entity.Nome),
             new SqlParameter("@Cognome", entity.Cognome),
             new SqlParameter("@Email", entity.Email),
+            new SqlParameter("@PasswordHash", entity.PasswordHash),
             new SqlParameter("@Ruolo", entity.Ruolo),
             new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
             new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)

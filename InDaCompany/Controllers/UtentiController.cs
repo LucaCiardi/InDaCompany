@@ -24,27 +24,66 @@ namespace InDaCompany.Controllers
             _daoUtenti = daoUtenti;
             _logger = logger;
         }
+        public async Task<IActionResult> Index()
+        {
+            try
+            {
+                var users = await _daoUtenti.GetAllAsync();
+                return View(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante il recupero degli utenti");
+                return HandleException(ex);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new UtenteCreateViewModel
+            {
+                RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" }
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nome,Cognome,Email,PasswordHash,Ruolo,Team")] Utente utente)
+        public async Task<IActionResult> Create(UtenteCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
+                    if (!await _daoUtenti.IsEmailUniqueAsync(model.Email))
+                    {
+                        ModelState.AddModelError("Email", "Questa email è già registrata");
+                        model.RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" };
+                        return View(model);
+                    }
+
+                    var utente = new Utente
+                    {
+                        Nome = model.Nome,
+                        Cognome = model.Cognome,
+                        Email = model.Email,
+                        PasswordHash = model.Password,
+                        Ruolo = model.Ruolo,
+                        Team = model.Team,
+                    };
+
                     await _daoUtenti.InsertAsync(utente);
-                    _logger.LogInformation("Utente creato con successo: {Email}", utente.Email);
-                    TempData["Success"] = "Utente creato con successo!";
+                    TempData["Success"] = "Utente creato con successo";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DAOException ex)
+                catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Errore durante la creazione dell'utente: {Email}", utente.Email);
-                    TempData["Error"] = "Errore nella creazione dell'utente";
-                    return View(utente);
+                    _logger.LogError(ex, "Errore durante la creazione dell'utente");
+                    ModelState.AddModelError("", "Errore durante la creazione dell'utente");
                 }
             }
-            return View(utente);
+            model.RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" };
+            return View(model);
         }
 
         [HttpGet]
@@ -55,55 +94,61 @@ namespace InDaCompany.Controllers
                 var utente = await _daoUtenti.GetByIdAsync(id);
                 if (utente == null)
                 {
-                    _logger.LogWarning("Utente non trovato: {Id}", id);
                     return NotFound();
                 }
-                return View(utente);
+
+                var viewModel = new UtenteEditViewModel
+                {
+                    ID = utente.ID,
+                    Nome = utente.Nome,
+                    Cognome = utente.Cognome,
+                    Email = utente.Email,
+                    Ruolo = utente.Ruolo,
+                    Team = utente.Team,
+                    RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" }
+                };
+
+                return View(viewModel);
             }
-            catch (DAOException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore durante il recupero dell'utente: {Id}", id);
+                _logger.LogError(ex, "Errore durante il recupero dell'utente {Id}", id);
                 return HandleException(ex);
             }
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Nome,Cognome,Email,PasswordHash,Ruolo,Team")] Utente utente)
+        public async Task<IActionResult> Edit(UtenteEditViewModel model)
         {
-            if (id != utente.ID)
-            {
-                _logger.LogWarning("ID utente non corrispondente");
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var existingUser = await _daoUtenti.GetByIdAsync(id);
-                    if (existingUser == null)
+                    var utente = await _daoUtenti.GetByIdAsync(model.ID);
+                    if (utente == null)
                     {
                         return NotFound();
                     }
 
-                    if (string.IsNullOrEmpty(utente.PasswordHash))
-                    {
-                        utente.PasswordHash = existingUser.PasswordHash;
-                    }
+                    utente.Nome = model.Nome;
+                    utente.Cognome = model.Cognome;
+                    utente.Email = model.Email;
+                    utente.Ruolo = model.Ruolo;
+                    utente.Team = model.Team;
 
                     await _daoUtenti.UpdateAsync(utente);
-                    _logger.LogInformation("Utente aggiornato con successo: {Id}", id);
-                    TempData["Success"] = "Utente modificato con successo";
+                    TempData["Success"] = "Utente aggiornato con successo";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DAOException ex)
+                catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Errore durante l'aggiornamento dell'utente: {Id}", id);
-                    TempData["Error"] = "Errore durante la modifica dell'utente";
-                    return View(utente);
+                    _logger.LogError(ex, "Errore durante l'aggiornamento dell'utente");
+                    ModelState.AddModelError("", "Errore durante l'aggiornamento dell'utente");
                 }
             }
-            return View(utente);
+            model.RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" };
+            return View(model);
         }
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
@@ -319,6 +364,38 @@ namespace InDaCompany.Controllers
                 var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
                     "wwwroot", "images", "profile.jpg");
                 return PhysicalFile(defaultAvatarPath, "image/jpeg");
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente == null)
+                {
+                    return NotFound();
+                }
+
+                const string defaultPassword = "Password123!";
+                var success = await _daoUtenti.ChangePasswordAsync(id, defaultPassword);
+
+                if (success)
+                {
+                    TempData["Success"] = "Password resettata con successo";
+                }
+                else
+                {
+                    TempData["Error"] = "Errore durante il reset della password";
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante il reset della password per l'utente {Id}", id);
+                TempData["Error"] = "Errore durante il reset della password";
+                return RedirectToAction(nameof(Index));
             }
         }
 

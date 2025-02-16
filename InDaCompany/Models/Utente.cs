@@ -33,7 +33,7 @@ namespace InDaCompany.Models
         public string? Team { get; set; }
         public byte[]? FotoProfilo { get; set; }
 
-        public DateTime DataCreazione { get; set; } = DateTime.Now;
+        public DateTime DataCreazione { get; set; } 
 
         public string NomeCompleto => $"{Nome} {Cognome}";
     }
