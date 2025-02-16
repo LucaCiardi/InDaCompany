@@ -21,7 +21,7 @@ namespace InDaCompany.Models
         public byte[]? Immagine { get; set; }
 
         public DateTime DataCreazione { get; set; } = DateTime.Now;
-
+        public List<MessaggioThread>? Messages { get; set; }
         public string TestoAnteprima => Testo.Length > 100 ?
             Testo.Substring(0, 97) + "..." :
             Testo;

@@ -10,9 +10,9 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     public async Task<List<ThreadForum>> GetAllAsync()
     {
         const string query = @"
-            SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
-            FROM ThreadForum
-            ORDER BY DataCreazione DESC";
+        SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine 
+        FROM ThreadForum
+        ORDER BY DataCreazione DESC";
 
         return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
     }
@@ -20,9 +20,9 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     public async Task<ThreadForum?> GetByIdAsync(int id)
     {
         const string query = @"
-            SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
-            FROM ThreadForum 
-            WHERE ID = @ID";
+        SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine 
+        FROM ThreadForum 
+        WHERE ID = @ID";
 
         var parameters = new[] { new SqlParameter("@ID", id) };
         return await ExecuteQuerySingleAsync(query, parameters);
@@ -31,7 +31,7 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     public async Task<List<ThreadForum>> GetThreadsByForumAsync(int forumID)
     {
         const string query = @"
-            SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
+            SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine 
             FROM ThreadForum 
             WHERE ForumID = @ForumID
             ORDER BY DataCreazione DESC";
@@ -43,8 +43,8 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     public async Task<List<ThreadForum>> GetThreadsByAuthorAsync(int authorID)
     {
         const string query = @"
-            SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione 
-            FROM ThreadForum 
+SELECT ID, Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine
+FROM ThreadForum 
             WHERE AutoreID = @AutoreID
             ORDER BY DataCreazione DESC";
 
@@ -55,19 +55,19 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     public async Task<int> InsertAsync(ThreadForum entity)
     {
         const string query = @"
-            INSERT INTO ThreadForum (Titolo, Testo, ForumID, AutoreID, DataCreazione) 
-            VALUES (@Titolo, @Testo, @ForumID, @AutoreID, @DataCreazione);
-            SELECT SCOPE_IDENTITY();";
+        INSERT INTO ThreadForum (Titolo, Testo, ForumID, AutoreID, DataCreazione, Immagine) 
+        VALUES (@Titolo, @Testo, @ForumID, @AutoreID, @DataCreazione, @Immagine);
+        SELECT SCOPE_IDENTITY();";
 
         var parameters = new[]
         {
-            new SqlParameter("@Titolo", entity.Titolo),
-            new SqlParameter("@Testo", entity.Testo),
-            new SqlParameter("@ForumID", entity.ForumID),
-            new SqlParameter("@AutoreID", entity.AutoreID),
-            new SqlParameter("@DataCreazione", DateTime.Now)
-        };
-
+        new SqlParameter("@Titolo", entity.Titolo),
+        new SqlParameter("@Testo", entity.Testo),
+        new SqlParameter("@ForumID", entity.ForumID),
+        new SqlParameter("@AutoreID", entity.AutoreID),
+        new SqlParameter("@DataCreazione", DateTime.Now),
+        new SqlParameter("@Immagine", (object?)entity.Immagine ?? DBNull.Value)
+    };
         using var conn = CreateConnection();
         using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddRange(parameters);
@@ -88,11 +88,13 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
     {
         const string query = @"
             UPDATE ThreadForum
-            SET Titolo = @Titolo, 
-                Testo = @Testo,
-                ForumID = @ForumID, 
-                AutoreID = @AutoreID
-            WHERE ID = @ID";
+SET Titolo = @Titolo, 
+    Testo = @Testo,
+    ForumID = @ForumID, 
+    AutoreID = @AutoreID,
+    Immagine = @Immagine
+WHERE ID = @ID
+";
 
         var parameters = new[]
         {
@@ -100,7 +102,8 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
             new SqlParameter("@Titolo", entity.Titolo),
             new SqlParameter("@Testo", entity.Testo),
             new SqlParameter("@ForumID", entity.ForumID),
-            new SqlParameter("@AutoreID", entity.AutoreID)
+            new SqlParameter("@AutoreID", entity.AutoreID),
+            new SqlParameter("@Immagine", (object?)entity.Immagine ?? DBNull.Value)
         };
 
         using var conn = CreateConnection();
@@ -162,7 +165,10 @@ public class DAOThreadForum : DAOBase<ThreadForum>, IDAOThreadForum
             Testo = reader.GetString(reader.GetOrdinal("Testo")),
             ForumID = reader.GetInt32(reader.GetOrdinal("ForumID")),
             AutoreID = reader.GetInt32(reader.GetOrdinal("AutoreID")),
-            DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
+            DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione")),
+            Immagine = reader.IsDBNull(reader.GetOrdinal("Immagine"))
+                ? null
+                : (byte[])reader.GetValue(reader.GetOrdinal("Immagine"))
         };
     }
 }

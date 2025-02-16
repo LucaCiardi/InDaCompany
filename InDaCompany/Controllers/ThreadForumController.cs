@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using InDaCompany.Models;
 using InDaCompany.Data.Interfaces;
 using InDaCompany.Data.Implementations;
+using System.Diagnostics.Metrics;
+using System;
 
 namespace InDaCompany.Controllers
 {
@@ -23,7 +25,24 @@ namespace InDaCompany.Controllers
             _daoForum = daoForum;
             _logger = logger;
         }
-
+        [AllowAnonymous]
+        public async Task<IActionResult> GetImage(int id)
+        {
+            try
+            {
+                var thread = await _daoThread.GetByIdAsync(id);
+                if (thread?.Immagine != null)
+                {
+                    return File(thread.Immagine, "image/jpeg"); 
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving thread image: {Id}", id);
+                return NotFound();
+            }
+        }
         [HttpGet]
         public async Task<IActionResult> Create(int forumId)
         {
@@ -32,36 +51,49 @@ namespace InDaCompany.Controllers
                 var forum = await _daoForum.GetByIdAsync(forumId);
                 if (forum == null)
                 {
-                    _logger.LogWarning("Forum non trovato: {Id}", forumId);
                     return NotFound();
                 }
 
                 ViewBag.ForumName = forum.Nome;
-                return View(new ThreadForum { ForumID = forumId });
+                var viewModel = new ThreadCreateViewModel { ForumID = forumId };
+                return View(viewModel);
             }
             catch (DAOException ex)
             {
-                _logger.LogError(ex, "Errore durante la preparazione del thread per il forum: {Id}", forumId);
+                _logger.LogError(ex, "Errore durante la preparazione del thread");
                 return HandleException(ex);
             }
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ForumID,Titolo,Testo")] ThreadForum thread)
+        public async Task<IActionResult> Create(ThreadCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    thread.AutoreID = int.Parse(User.FindFirst("UserId")?.Value ??
-                        throw new InvalidOperationException("Utente non autenticato"));
+                    var thread = new ThreadForum
+                    {
+                        Titolo = model.Titolo,
+                        Testo = model.Testo,
+                        ForumID = model.ForumID,
+                        AutoreID = int.Parse(User.FindFirst("UserId")?.Value ??
+                            throw new InvalidOperationException("Utente non autenticato"))
+                    };
+
+                    if (model.Immagine != null)
+                    {
+                        using var memoryStream = new MemoryStream();
+                        await model.Immagine.CopyToAsync(memoryStream);
+                        thread.Immagine = memoryStream.ToArray();
+                    }
 
                     await _daoThread.InsertAsync(thread);
-                    _logger.LogInformation("Thread creato con successo nel forum: {ForumId}", thread.ForumID);
                     return RedirectToAction("Details", "Forum", new { id = thread.ForumID });
                 }
-                catch (DAOException ex)
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Errore durante la creazione del thread");
                     ModelState.AddModelError("", "Impossibile creare il thread. Riprova.");
@@ -70,7 +102,7 @@ namespace InDaCompany.Controllers
 
             try
             {
-                var forum = await _daoForum.GetByIdAsync(thread.ForumID);
+                var forum = await _daoForum.GetByIdAsync(model.ForumID);
                 ViewBag.ForumName = forum?.Nome ?? "Forum sconosciuto";
             }
             catch (DAOException ex)
@@ -78,7 +110,78 @@ namespace InDaCompany.Controllers
                 _logger.LogError(ex, "Errore durante il recupero del nome del forum");
             }
 
+            return View(model);
+        }
+       
+
+
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? NewImage, bool RemoveImage = false, string? returnUrl = null)
+        {
+            if (id != thread.ID) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var originalThread = await _daoThread.GetByIdAsync(id);
+                    if (originalThread == null) return NotFound();
+
+                    if (NewImage != null)
+                    {
+                        using var memoryStream = new MemoryStream();
+                        await NewImage.CopyToAsync(memoryStream);
+                        thread.Immagine = memoryStream.ToArray();
+                    }
+                    else if (!RemoveImage)
+                    {
+                        thread.Immagine = originalThread.Immagine;
+                    }
+                    else
+                    {
+                        thread.Immagine = null;
+                    }
+
+                    await _daoThread.UpdateAsync(thread);
+
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
+                    return RedirectToAction("Index", "Forum");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating thread: {Id}", id);
+                    ModelState.AddModelError("", "Errore durante l'aggiornamento del thread");
+                }
+            }
+
             return View(thread);
         }
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                var thread = await _daoThread.GetByIdAsync(id);
+                if (thread == null) return NotFound();
+
+                if (thread.AutoreID != int.Parse(User.FindFirst("UserId")?.Value ?? "0"))
+                {
+                    return Forbid();
+                }
+
+                return View(thread);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving thread: {Id}", id);
+                return HandleException(ex);
+            }
+        }
+
     }
 }

@@ -219,3 +219,14 @@ body{
         .options-menu button:hover {
             background-color: #f8f9fa;
         }
+.btn-indigo {
+    color: #fff;
+    background-color: indigo;
+    border-color: indigo;
+}
+
+    .btn-indigo:hover {
+        color: #fff;
+        background-color: rgb(141, 65, 195);
+        border-color: indigo;
+    }
