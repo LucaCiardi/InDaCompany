@@ -171,6 +171,17 @@ namespace InDaCompany.Data.Implementations
                 throw new DAOException("Errore durante la ricerca dei forum", ex);
             }
         }
+        public async Task<List<Forum>> GetForumByTeam(string team)
+        {
+            const string query = @"
+        SELECT ID, Nome, Descrizione, Team
+        FROM Forum 
+        WHERE Team = @Team OR Team IS NULL
+        ORDER BY Nome";
+
+            var parameters = new[] { new SqlParameter("@Team", team) };
+            return await ExecuteQueryListAsync(query, parameters);
+        }
 
         protected override Forum MapFromReader(SqlDataReader reader)
         {

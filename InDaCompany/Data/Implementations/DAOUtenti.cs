@@ -47,6 +47,17 @@ namespace InDaCompany.Data.Implementations
             var exists = await ExistsAsync(query, parameters);
             return !exists;
         }
+        public async Task<List<Utente>> GetByTeamAsync(string team)
+        {
+            const string query = @"
+        SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, FotoProfilo, DataCreazione
+        FROM Utenti 
+        WHERE Team = @Team
+        ORDER BY Cognome, Nome";
+
+            var parameters = new[] { new SqlParameter("@Team", team) };
+            return await ExecuteQueryListAsync(query, parameters);
+        }
 
         public async Task<int> InsertAsync(Utente entity)
         {

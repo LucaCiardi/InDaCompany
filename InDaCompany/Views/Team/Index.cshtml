@@ -1,0 +1,98 @@
+﻿@model TeamViewModel
+
+<div class="container mt-4">
+    @if (string.IsNullOrEmpty(Model.TeamName))
+    {
+        <div class="alert alert-info">
+            <i class="ti ti-info-circle me-2"></i>Non sei assegnato a nessun team.
+        </div>
+    }
+    else
+    {
+        <h2 class="mb-4">Team: @Model.TeamName</h2>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Membri del Team</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var member in Model.Members)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div>@member.Nome @member.Cognome</div>
+                                        <small class="ms-auto">@member.Ruolo</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Forum del Team</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Forums.Any())
+                        {
+                            @foreach (var forum in Model.Forums)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a asp-controller="Forum" asp-action="Index"
+                                               asp-route-forumId="@forum.ID">@forum.Nome</a>
+                                        </h5>
+                                        <p class="card-text">@forum.Descrizione</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Nessun forum disponibile per questo team.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ticket del Team</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Tickets.Any())
+                        {
+                            @foreach (var ticket in Model.Tickets)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">@ticket.Titolo</h6>
+                                            <span class="badge bg-@(ticket.Stato switch {
+                                                "Aperto" => "danger",
+                                                "In lavorazione" => "warning",
+                                                "Chiuso" => "success",
+                                                _ => "secondary"
+                                            })">@ticket.Stato</span>
+                                        </div>
+                                        <p class="card-text mt-2">@ticket.Descrizione</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Nessun ticket assegnato a questo team.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
