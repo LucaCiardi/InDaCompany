@@ -23,6 +23,7 @@ CREATE TABLE ThreadForum (
     ID INT IDENTITY PRIMARY KEY,
     Titolo NVARCHAR(255) NOT NULL,
     Testo NVARCHAR(MAX) NULL,
+    ImmaginePath VARCHAR(255) NULL, 
     ForumID INT NOT NULL,
     AutoreID INT NOT NULL,
     DataCreazione DATETIME DEFAULT GETDATE(),
@@ -44,15 +45,16 @@ CREATE TABLE MessaggiThread (
     CONSTRAINT FK_Messaggio_Autore FOREIGN KEY (AutoreID) 
         REFERENCES Utenti(ID) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
-
 CREATE TABLE Ticket (
     ID INT IDENTITY PRIMARY KEY,
     Titolo NVARCHAR(200) NOT NULL,
     Descrizione NVARCHAR(MAX) NOT NULL,
+    Soluzione NVARCHAR(MAX) NULL, 
     Stato VARCHAR(20) NOT NULL DEFAULT 'Aperto',
     CreatoDaID INT NOT NULL,
     AssegnatoAID INT NULL,
     DataApertura DATETIME DEFAULT GETDATE(),
+    DataChiusura DATETIME NULL,   
     CONSTRAINT CHK_Stato CHECK (Stato IN ('Aperto', 'In lavorazione', 'Chiuso')),
     CONSTRAINT FK_Ticket_CreatoDa FOREIGN KEY (CreatoDaID) 
         REFERENCES Utenti(ID) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -60,6 +62,7 @@ CREATE TABLE Ticket (
         REFERENCES Utenti(ID) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT UC_TicketTitoloData UNIQUE (Titolo, CreatoDaID, DataApertura) 
 );
+
 
 CREATE TABLE Likes (
     ID INT IDENTITY PRIMARY KEY,
