@@ -247,5 +247,80 @@ namespace InDaCompany.Controllers
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return RedirectToAction("Login");
             }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfilePicture([FromForm] FotoProfiloViewModel model)
+        {
+            try
+            {
+                if (model.Foto == null || model.Foto.Length == 0)
+                {
+                    return Json(new { success = false, message = "Nessun file caricato" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
+                if (!allowedTypes.Contains(model.Foto.ContentType.ToLower()))
+                {
+                    return Json(new { success = false, message = "Formato file non supportato" });
+                }
+
+                if (model.Foto.Length > 2 * 1024 * 1024) // 2MB limit
+                {
+                    return Json(new { success = false, message = "L'immagine non può superare i 2MB" });
+                }
+
+                using var memoryStream = new MemoryStream();
+                await model.Foto.CopyToAsync(memoryStream);
+                await _daoUtenti.UpdateProfilePictureAsync(model.UtenteId, memoryStream.ToArray());
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating profile picture for user: {Id}", model.UtenteId);
+                return Json(new { success = false, message = "Errore durante l'aggiornamento" });
+            }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveProfilePicture(int id)
+        {
+            try
+            {
+                await _daoUtenti.SetDefaultProfilePictureAsync(id);
+                return RedirectToAction("Index", "Profile");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting default profile picture for user: {Id}", id);
+                return RedirectToAction("Index", "Profile");
+            }
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProfilePicture(int id)
+        {
+            try
+            {
+                var utente = await _daoUtenti.GetByIdAsync(id);
+                if (utente?.FotoProfilo != null)
+                {
+                    return File(utente.FotoProfilo, "image/jpeg");
+                }
+
+                var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                    "wwwroot", "images", "profile.jpg");
+                return PhysicalFile(defaultAvatarPath, "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving profile picture for user: {Id}", id);
+                var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                    "wwwroot", "images", "profile.jpg");
+                return PhysicalFile(defaultAvatarPath, "image/jpeg");
+            }
+        }
+
     }
+}

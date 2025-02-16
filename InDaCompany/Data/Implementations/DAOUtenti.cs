@@ -11,9 +11,8 @@ namespace InDaCompany.Data.Implementations
         public async Task<List<Utente>> GetAllAsync()
         {
             const string query = @"
-                SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione 
-                FROM Utenti
-                ORDER BY Cognome, Nome";
+    SELECT ID, Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo 
+    FROM Utenti";
 
             return await ExecuteQueryListAsync(query, Array.Empty<SqlParameter>());
         }
@@ -224,8 +223,44 @@ namespace InDaCompany.Data.Implementations
                 Team = reader.IsDBNull(reader.GetOrdinal("Team"))
                     ? null
                     : reader.GetString(reader.GetOrdinal("Team")),
-                DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione"))
+                DataCreazione = reader.GetDateTime(reader.GetOrdinal("DataCreazione")),
+                FotoProfilo = reader.IsDBNull(reader.GetOrdinal("FotoProfilo"))
+            ? null
+            : (byte[])reader.GetValue(reader.GetOrdinal("FotoProfilo"))
             };
         }
+        public async Task UpdateProfilePictureAsync(int userId, byte[] imageData)
+        {
+            const string query = "UPDATE Utenti SET FotoProfilo = @FotoProfilo WHERE ID = @ID";
+            var parameters = new[]
+            {
+        new SqlParameter("@ID", userId),
+        new SqlParameter("@FotoProfilo", (object?)imageData ?? DBNull.Value)
+    };
+
+            using var conn = CreateConnection();
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddRange(parameters);
+
+            try
+            {
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new DAOException($"Errore durante l'aggiornamento della foto profilo per l'utente {userId}", ex);
+            }
+        }
+
+        public async Task SetDefaultProfilePictureAsync(int userId)
+        {
+            var defaultAvatarPath = Path.Combine(Directory.GetCurrentDirectory(),
+                "wwwroot", "images", "profile.jpg");
+            byte[] defaultImageBytes = await File.ReadAllBytesAsync(defaultAvatarPath);
+
+            await UpdateProfilePictureAsync(userId, defaultImageBytes);
+        }
+
     }
 }
