@@ -44,18 +44,18 @@ namespace InDaCompany.Controllers
             }
         }
         [HttpGet]
-        public async Task<IActionResult> Create(int forumId)
+        public async Task<IActionResult> Create()
         {
             try
             {
-                var forum = await _daoForum.GetByIdAsync(forumId);
-                if (forum == null)
+                var forumList = await _daoForum.GetAllAsync();
+                if (forumList == null)
                 {
                     return NotFound();
                 }
 
-                ViewBag.ForumName = forum.Nome;
-                var viewModel = new ThreadCreateViewModel { ForumID = forumId };
+                ViewBag.Forums = forumList;
+                var viewModel = new ThreadCreateViewModel {};
                 return View(viewModel);
             }
             catch (DAOException ex)
@@ -74,6 +74,9 @@ namespace InDaCompany.Controllers
             {
                 try
                 {
+                    var forumList = await _daoForum.GetAllAsync();
+                    ViewBag.Forums = forumList;
+
                     var thread = new ThreadForum
                     {
                         Titolo = model.Titolo,
@@ -91,7 +94,7 @@ namespace InDaCompany.Controllers
                     }
 
                     await _daoThread.InsertAsync(thread);
-                    return RedirectToAction("Details", "Forum", new { id = thread.ForumID });
+                    return RedirectToAction("Index", "Forum", new { id = thread.ForumID });
                 }
                 catch (Exception ex)
                 {
