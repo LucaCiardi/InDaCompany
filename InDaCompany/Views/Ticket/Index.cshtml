@@ -13,6 +13,7 @@
 			<th>Descrizione</th>
 			<th>Soluzione</th>
 			<th>Stato</th>
+			<th>Assegnato a</th>
 			<th>Data Apertura</th>
 			<th>Data Chiusura</th>
 			<th>Azioni</th>
@@ -48,6 +49,9 @@
                             _ => "secondary"
                         })">@item.StatoDisplay</span>
 						</td>
+						<td class="truncate">
+							@item.AssegnatoAID
+						</td>
 						<td>@item.DataApertura.ToString("dd/MM/yyyy HH:mm")</td>
 						<td>
 							@if (item?.DataChiusura != null)
@@ -81,7 +85,11 @@
 			</table>
 		</div>
 	</div>
+	<a asp-controller="Ticket" asp-action="Create" class="btn btn-indigo btn-lg">
+		<i class="ti ti-ticket me-2"></i>Apri nuovo Ticket
+	</a>
 </div>
+
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1"
 	 aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
@@ -151,27 +159,32 @@
 				width: 4%;
 			}
 			#table-container th:nth-child(2) {
-				width: 7%;
+				width: 8%;
 			}
 			#table-container th:nth-child(3) {
-				width: 12%;
+				width: 11%;
 			}
 			#table-container th:nth-child(4) {
-				width: 13%;
+				width: 12%;
 			}
 			#table-container th:nth-child(5) {
-				width: 13%;
+				width: 11%;
 			}
 			#table-container th:nth-child(6) {
 				width: 12%;
 			}
+
 			#table-container th:nth-child(7) {
-				width: 11%;
+				width: 9%;
 			}
+
 			#table-container th:nth-child(8) {
-				width: 11%;
+				width: 8%;
 			}
 			#table-container th:nth-child(9) {
+				width: 8%;
+			}
+			#table-container th:nth-child(10) {
 				width: 17%;
 			}
 

@@ -33,6 +33,20 @@
                     <span asp-validation-for="Stato" class="text-danger"></span>
                 </div>
 
+                @if (ViewBag.Utente.Ruolo == "Admin" || ViewBag.Utente.Ruolo == "Manager")
+                {
+                <div class="form-group mb-3">
+                    <label asp-for="AssegnatoAID" class="control-label">Assegnato a</label>
+                    <select asp-for="AssegnatoAID" class="form-select" required>
+                        <option value="" selected>-- Seleziona un collaboratore --</option>
+                            @foreach (var user in ViewBag.ListaUtenti)
+                            {
+                                <option value="@user.ID">@user.NomeCompleto</option>
+                            }
+                    </select>
+                </div>
+                }
+
                 <div class="form-group mt-4">
                     <button type="submit" class="btn btn-sm btn-indigo">
                         <i class="bi bi-save me-2"></i> Crea

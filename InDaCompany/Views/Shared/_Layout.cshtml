@@ -35,12 +35,7 @@
                     </button>
 
                     <div class="navbar-collapse collapse justify-content-end" id="navbarNav">
-                        <form class="d-flex me-3" asp-controller="Home" asp-action="Search" method="get">
-                            @Html.AntiForgeryToken()
-                            <input class="form-control rounded-pill" type="search" name="searchTerm"
-                                   placeholder="Cerca..." aria-label="Cerca">
-                        </form>
-                        <ul class="navbar-nav">
+                        <ul class="navbar-nav me-auto">
                                 <li class="nav-item mt-1 ms-2">
                                     <a class="btn btn-link nav-link text-white p-0" asp-controller="Forum" asp-action="Index">
                                     <i class="ti ti-messages fs-4"></i>
@@ -66,6 +61,15 @@
                                     <i class="ti ti-users-group fs-4" title="Team"></i>
                                 </a>
                             </li>
+                        </ul>
+
+                        <form class="d-flex me-3" asp-controller="Home" asp-action="Search" method="get">
+                            @Html.AntiForgeryToken()
+                            <input class="form-control rounded-pill" type="search" name="searchTerm"
+                                   placeholder="Cerca..." aria-label="Cerca">
+                        </form>
+
+                        <ul class="navbar-nav">
                             <li class="nav-item mt-1 ms-2">
                                 <a class="btn btn-link nav-link text-white p-0" asp-controller="Profile" asp-action="Index">
                                     <i class="ti ti-user-circle fs-4" title="Profilo"></i>
