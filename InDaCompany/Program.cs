@@ -24,6 +24,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);   
         options.SlidingExpiration = true;                
     });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AllUsers", policy =>
+        policy.RequireRole("Admin", "Manager", "Dipendente"));
+});
 
 var app = builder.Build();
 

@@ -10,7 +10,7 @@ using InDaCompany.ViewModels;
 
 namespace InDaCompany.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UtentiController : BaseController
     {
         private readonly IDAOUtenti _daoUtenti;
@@ -24,6 +24,7 @@ namespace InDaCompany.Controllers
             _daoUtenti = daoUtenti;
             _logger = logger;
         }
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             try
@@ -37,8 +38,8 @@ namespace InDaCompany.Controllers
                 return HandleException(ex);
             }
         }
-
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View(new UtenteCreateViewModel
@@ -48,6 +49,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UtenteCreateViewModel model)
         {
@@ -87,6 +89,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -118,6 +121,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UtenteEditViewModel model)
         {
@@ -151,6 +155,7 @@ namespace InDaCompany.Controllers
             return View(model);
         }
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -178,6 +183,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -207,6 +213,7 @@ namespace InDaCompany.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+        [Authorize(Roles = "Admin")]
         private async Task<bool> HasOtherAdminsAsync(int currentUserId)
         {
             try
@@ -293,31 +300,48 @@ namespace InDaCompany.Controllers
                 return RedirectToAction("Login");
             }
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager,Dipendente")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfilePicture([FromForm] FotoProfiloViewModel model)
         {
             try
             {
+                var currentUserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+                _logger.LogInformation("Current User ID: {CurrentUserId}, Requested User ID: {RequestedUserId}",
+                    currentUserId, model.UtenteId);
+                _logger.LogInformation("User Roles: {Roles}",
+                    string.Join(", ", User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)));
+
+                if (currentUserId != model.UtenteId && !User.IsInRole("Admin"))
+                {
+                    _logger.LogWarning("Unauthorized attempt to modify profile picture. Current User: {CurrentUserId}, Target User: {TargetUserId}",
+                        currentUserId, model.UtenteId);
+                    return Json(new { success = false, message = "Non autorizzato" });
+                }
+
                 if (model.Foto == null || model.Foto.Length == 0)
                 {
+                    _logger.LogWarning("No file uploaded");
                     return Json(new { success = false, message = "Nessun file caricato" });
-                }
-
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
-                if (!allowedTypes.Contains(model.Foto.ContentType.ToLower()))
-                {
-                    return Json(new { success = false, message = "Formato file non supportato" });
-                }
-
-                if (model.Foto.Length > 2 * 1024 * 1024) 
-                {
-                    return Json(new { success = false, message = "L'immagine non può superare i 2MB" });
                 }
 
                 using var memoryStream = new MemoryStream();
                 await model.Foto.CopyToAsync(memoryStream);
-                await _daoUtenti.UpdateProfilePictureAsync(model.UtenteId, memoryStream.ToArray());
+                var imageData = memoryStream.ToArray();
 
+                _logger.LogInformation("File size: {Size} bytes", imageData.Length);
+
+                var utente = await _daoUtenti.GetByIdAsync(model.UtenteId);
+                if (utente == null)
+                {
+                    _logger.LogWarning("User not found: {UserId}", model.UtenteId);
+                    return Json(new { success = false, message = "Utente non trovato" });
+                }
+
+                utente.FotoProfilo = imageData;
+                await _daoUtenti.UpdateAsync(utente);
+
+                _logger.LogInformation("Profile picture updated successfully for user: {UserId}", model.UtenteId);
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -328,6 +352,7 @@ namespace InDaCompany.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager,Dipendente")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveProfilePicture(int id)
         {
@@ -367,6 +392,7 @@ namespace InDaCompany.Controllers
             }
         }
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(int id)
         {
