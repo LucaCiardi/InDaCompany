@@ -129,6 +129,8 @@ namespace InDaCompany.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? NewImage, bool RemoveImage = false, string? returnUrl = null)
         {
+            _logger.LogInformation("Edit started - RemoveImage flag: {RemoveImage}", RemoveImage);
+
             if (id != thread.ID) return NotFound();
 
             if (ModelState.IsValid)
@@ -138,24 +140,43 @@ namespace InDaCompany.Controllers
                     var originalThread = await _daoThread.GetByIdAsync(id);
                     if (originalThread == null) return NotFound();
 
+                    // Set other properties
+                    thread.Titolo = thread.Titolo;
+                    thread.Testo = thread.Testo;
+                    thread.ForumID = originalThread.ForumID;
+                    thread.AutoreID = originalThread.AutoreID;
+                    thread.DataCreazione = originalThread.DataCreazione;
+
                     if (NewImage != null)
                     {
+                        _logger.LogInformation("Processing new image upload");
                         using var memoryStream = new MemoryStream();
                         await NewImage.CopyToAsync(memoryStream);
                         thread.Immagine = memoryStream.ToArray();
                     }
                     else if (RemoveImage)
                     {
+                        _logger.LogInformation("Setting default image");
                         var defaultImagePath = Path.Combine(Directory.GetCurrentDirectory(),
-                            "wwwroot", "images", "nopicture.jpg");
+                            "wwwroot", "images", "nopicture.png");
+
+                        if (!System.IO.File.Exists(defaultImagePath))
+                        {
+                            _logger.LogError("Default image not found at: {Path}", defaultImagePath);
+                            throw new FileNotFoundException("Default image not found", defaultImagePath);
+                        }
+
                         thread.Immagine = await System.IO.File.ReadAllBytesAsync(defaultImagePath);
+                        _logger.LogInformation("Default image set successfully");
                     }
                     else
                     {
+                        _logger.LogInformation("Keeping original image");
                         thread.Immagine = originalThread.Immagine;
                     }
 
                     await _daoThread.UpdateAsync(thread);
+                    _logger.LogInformation("Thread updated successfully");
 
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
@@ -168,6 +189,10 @@ namespace InDaCompany.Controllers
                     _logger.LogError(ex, "Error updating thread: {Id}", id);
                     ModelState.AddModelError("", "Errore durante l'aggiornamento del thread");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("ModelState is invalid");
             }
 
             return View(thread);
