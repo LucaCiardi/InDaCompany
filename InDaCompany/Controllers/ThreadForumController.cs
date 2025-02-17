@@ -92,6 +92,13 @@ namespace InDaCompany.Controllers
                         await model.Immagine.CopyToAsync(memoryStream);
                         thread.Immagine = memoryStream.ToArray();
                     }
+                    else
+                    {
+                        // Load default image
+                        var defaultImagePath = Path.Combine(Directory.GetCurrentDirectory(),
+                            "wwwroot", "images", "nopicture.png");
+                        thread.Immagine = await System.IO.File.ReadAllBytesAsync(defaultImagePath);
+                    }
 
                     await _daoThread.InsertAsync(thread);
                     return RedirectToAction("Index", "Forum", new { id = thread.ForumID });
@@ -115,13 +122,12 @@ namespace InDaCompany.Controllers
 
             return View(model);
         }
-       
 
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? NewImage, bool RemoveImage = false, string? returnUrl = null)
+        public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? NewImage, bool RemoveImage = false, string? returnUrl = null)
         {
             if (id != thread.ID) return NotFound();
 
@@ -138,13 +144,15 @@ public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? New
                         await NewImage.CopyToAsync(memoryStream);
                         thread.Immagine = memoryStream.ToArray();
                     }
-                    else if (!RemoveImage)
+                    else if (RemoveImage)
                     {
-                        thread.Immagine = originalThread.Immagine;
+                        var defaultImagePath = Path.Combine(Directory.GetCurrentDirectory(),
+                            "wwwroot", "images", "nopicture.jpg");
+                        thread.Immagine = await System.IO.File.ReadAllBytesAsync(defaultImagePath);
                     }
                     else
                     {
-                        thread.Immagine = null;
+                        thread.Immagine = originalThread.Immagine;
                     }
 
                     await _daoThread.UpdateAsync(thread);
