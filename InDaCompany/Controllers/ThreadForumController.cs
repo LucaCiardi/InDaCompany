@@ -232,8 +232,8 @@ namespace InDaCompany.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting ticket: {Id}", id);
-                TempData["Error"] = "Errore durante l'eliminazione del ticket";
+                _logger.LogError(ex, "Error deleting thread: {Id}", id);
+                TempData["Error"] = "Errore durante l'eliminazione del thread";
                 return RedirectToAction("Index", "Forum");
             }
         }

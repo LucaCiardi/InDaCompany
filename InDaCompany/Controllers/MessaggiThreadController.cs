@@ -50,4 +50,25 @@ public class MessaggiThreadController : BaseController
         }
         return RedirectToAction("Index", "Forum");
     }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        try
+        {
+            await _daoMessaggiThread.DeleteAsync(id);
+            TempData["Success"] = "Commento eliminato con successo";
+            return RedirectToAction("Index", "Forum");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting MessaggioThread: {Id}", id);
+            TempData["Error"] = "Errore durante l'eliminazione del commento";
+            return RedirectToAction("Index", "Forum");
+        }
+    }
+
+
 }
+
+
