@@ -13,3 +13,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+function toggleLike(threadId) {
+    $.post('/Like/ToggleLike', { threadId: threadId })
+        .done(function (response) {
+            if (response.success) {
+                const likeButton = $(`.likeButton[data-thread-id="${threadId}"]`);
+                const likeCount = $(`#likeCount-${threadId}`);
+
+                if (response.liked) {
+                    likeButton.addClass('active');
+                } else {
+                    likeButton.removeClass('active');
+                }
+
+                likeCount.text(response.likeCount);
+            }
+        });
+}
+
+$(document).ready(function () {
+    $('.likeButton').each(function () {
+        const threadId = $(this).data('thread-id');
+        $.get(`/Like/GetLikeStatus?threadId=${threadId}`)
+            .done(function (response) {
+                if (response.success) {
+                    const likeButton = $(`.likeButton[data-thread-id="${threadId}"]`);
+                    const likeCount = $(`#likeCount-${threadId}`);
+
+                    if (response.liked) {
+                        likeButton.addClass('active');
+                    }
+                    likeCount.text(response.likeCount);
+                }
+            });
+    });
+});
