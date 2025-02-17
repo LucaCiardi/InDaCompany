@@ -85,6 +85,15 @@ namespace InDaCompany.Controllers
                 }
             }
             model.RuoliDisponibili = new[] { "Dipendente", "Manager", "Admin" };
+            _logger.LogInformation("Create action called");
+            _logger.LogInformation("ModelState is valid: {IsValid}", ModelState.IsValid);
+            if (!ModelState.IsValid)
+            {
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning("Validation error: {Error}", error.ErrorMessage);
+                }
+            }
             return View(model);
         }
 

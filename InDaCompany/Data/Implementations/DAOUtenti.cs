@@ -1,4 +1,5 @@
-﻿using InDaCompany.Data.Interfaces;
+﻿using System.Data;
+using InDaCompany.Data.Interfaces;
 using InDaCompany.Models;
 using Microsoft.Data.SqlClient;
 
@@ -62,20 +63,20 @@ namespace InDaCompany.Data.Implementations
         public async Task<int> InsertAsync(Utente entity)
         {
             const string query = @"
-            INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team,  FotoProfilo) 
-            VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team,  @FotoProfilo);
-            SELECT SCOPE_IDENTITY();";
+INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, FotoProfilo) 
+VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @FotoProfilo);
+SELECT SCOPE_IDENTITY();";
 
             var parameters = new[]
-            {
-            new SqlParameter("@Nome", entity.Nome),
-            new SqlParameter("@Cognome", entity.Cognome),
-            new SqlParameter("@Email", entity.Email),
-            new SqlParameter("@PasswordHash", entity.PasswordHash),
-            new SqlParameter("@Ruolo", entity.Ruolo),
-            new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
-            new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)
-        };
+{
+    new SqlParameter("@Nome", entity.Nome),
+    new SqlParameter("@Cognome", entity.Cognome),
+    new SqlParameter("@Email", entity.Email),
+    new SqlParameter("@PasswordHash", entity.PasswordHash),
+    new SqlParameter("@Ruolo", entity.Ruolo),
+    new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
+    new SqlParameter("@FotoProfilo", SqlDbType.VarBinary) { Value = (object?)entity.FotoProfilo ?? DBNull.Value }
+};
 
             using var conn = CreateConnection();
             using var cmd = new SqlCommand(query, conn);
@@ -118,7 +119,7 @@ PasswordHash = @PasswordHash,
             new SqlParameter("@PasswordHash", entity.PasswordHash),
             new SqlParameter("@Ruolo", entity.Ruolo),
             new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
-            new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)
+new SqlParameter("@FotoProfilo", SqlDbType.VarBinary) { Value = (object?)entity.FotoProfilo ?? DBNull.Value }
         };
 
             using var conn = CreateConnection();
