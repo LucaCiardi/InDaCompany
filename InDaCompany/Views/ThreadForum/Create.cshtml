@@ -4,7 +4,18 @@
     <h1 class="mb-4">Nuovo Thread</h1>
     <form asp-action="Create" method="post" enctype="multipart/form-data">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <input type="hidden" asp-for="ForumID" />
+
+        <div class="form-group mb-3">
+            <label asp-for="ForumID" class="control-label">Forum</label>
+            <select asp-for="ForumID" class="form-control" required>
+                @foreach (var forum in ViewBag.Forums)
+                {
+                    <option value="@forum.ID">@forum.Nome</option>
+                }
+            </select>
+            <span asp-validation-for="ForumID" class="text-danger"></span>
+        </div>
+
 
         <div class="form-group mb-3">
             <label asp-for="Titolo" class="control-label">Titolo</label>
@@ -26,7 +37,7 @@
 
         <div class="form-group">
             <button type="submit" class="btn btn-indigo">Pubblica</button>
-            <a asp-controller="Forum" asp-action="Details" asp-route-id="@Model.ForumID" class="btn btn-indigo">
+            <a asp-controller="Forum" asp-action="Index" class="btn btn-indigo">
                 Annulla
             </a>
         </div>

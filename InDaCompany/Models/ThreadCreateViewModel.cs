@@ -11,7 +11,8 @@ namespace InDaCompany.Models
         [Required(ErrorMessage = "Il campo Testo è obbligatorio")]
         public string Testo { get; set; } = null!;
 
-        public int ForumID { get; set; }
+		[Required(ErrorMessage = "Il campo Forum è obbligatorio")]
+		public int ForumID { get; set; }
 
         [Display(Name = "Immagine")]
         [AllowedExtensions(new string[] { ".jpg", ".jpeg", ".png", ".gif" })]
