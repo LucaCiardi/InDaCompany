@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using InDaCompany.Models;
 using InDaCompany.Data.Interfaces;
+using System.Security.Claims;
 
 namespace InDaCompany.Controllers
 {
@@ -51,6 +52,7 @@ namespace InDaCompany.Controllers
                     Threads = threads ?? new List<ThreadForum>(),
                     Messages = messages ?? new List<MessaggioThread>()
                 };
+
                 ViewBag.Utenti = await _daoUtenti.GetAllAsync();
                 return View(model);
             }

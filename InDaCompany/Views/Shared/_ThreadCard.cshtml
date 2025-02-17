@@ -42,7 +42,9 @@
     <div class="card-footer">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                @if (User.FindFirst("UserId")?.Value == Model.AutoreID.ToString())
+                @if (User.FindFirst("UserId")?.Value == Model.AutoreID.ToString() 
+                || User.IsInRole("Admin")
+                || User.IsInRole("Manager"))
                 {
                     <a asp-controller="ThreadForum" asp-action="Edit" asp-route-id="@Model.ID"
                        class="btn btn-sm btn-indigo me-2">
