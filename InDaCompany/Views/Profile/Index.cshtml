@@ -7,11 +7,12 @@
     <!-- Header del profilo -->
     <div class="profile-header d-flex align-items-center">
         <div class="profile-picture-container">
-            <img src="@Url.Action("GetProfilePicture", "Utenti", new { id = Model.Utente?.ID })"
-                 alt="Foto Profilo"
-                 class="profile-photo me-3"
-                 onerror="this.src='/images/profile.jpg'" />
-            @if (User.Identity?.Name == Model.Utente?.Email)
+            <img src="@Url.Action("GetProfilePicture", "Utenti", new { id = Model.Utente.ID })"
+                 alt="Profile Picture"
+                 class="rounded-circle me-3"
+                 style="width: 100px; height: 100px; object-fit: cover;"
+                 onerror="this.src='/images/default-avatar.png'" />
+            @if (User.Identity?.Name == Model.Utente.Email)
             {
                 <div class="edit-overlay">
                     <button class="edit-button" onclick="showOptions()">
@@ -21,7 +22,7 @@
                         <button onclick="uploadPicture()" class="btn btn-sm btn-link">Upload Picture</button>
                         <form asp-controller="Utenti" asp-action="RemoveProfilePicture" method="post" style="display: inline;">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Utente?.ID" />
+                            <input type="hidden" name="id" value="@Model.Utente.ID" />
                             <button type="submit" class="btn btn-sm btn-link">Remove Picture</button>
                         </form>
                     </div>

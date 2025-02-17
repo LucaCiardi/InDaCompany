@@ -62,8 +62,8 @@ namespace InDaCompany.Data.Implementations
         public async Task<int> InsertAsync(Utente entity)
         {
             const string query = @"
-            INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team, DataCreazione, FotoProfilo) 
-            VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team, @DataCreazione, @FotoProfilo);
+            INSERT INTO Utenti (Nome, Cognome, Email, PasswordHash, Ruolo, Team,  FotoProfilo) 
+            VALUES (@Nome, @Cognome, @Email, @PasswordHash, @Ruolo, @Team,  @FotoProfilo);
             SELECT SCOPE_IDENTITY();";
 
             var parameters = new[]
@@ -74,7 +74,6 @@ namespace InDaCompany.Data.Implementations
             new SqlParameter("@PasswordHash", entity.PasswordHash),
             new SqlParameter("@Ruolo", entity.Ruolo),
             new SqlParameter("@Team", (object?)entity.Team ?? DBNull.Value),
-            new SqlParameter("@DataCreazione", DateTime.Now),
             new SqlParameter("@FotoProfilo", (object?)entity.FotoProfilo ?? DBNull.Value)
         };
 
