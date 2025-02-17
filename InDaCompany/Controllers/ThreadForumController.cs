@@ -220,5 +220,24 @@ namespace InDaCompany.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            try
+            {
+                await _daoThread.DeleteAsync(id);
+                TempData["Success"] = "Thread eliminato con successo";
+                return RedirectToAction("Index", "Forum");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting ticket: {Id}", id);
+                TempData["Error"] = "Errore durante l'eliminazione del ticket";
+                return RedirectToAction("Index", "Forum");
+            }
+        }
+
+
     }
 }
