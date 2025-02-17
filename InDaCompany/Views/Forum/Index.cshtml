@@ -6,13 +6,13 @@
 <div class="container mt-4">
     <div class="row">
 
-        <div class="col-md-2" id="sidebar">
-            <div class="card mb-4 h-100">
+        <div class="card col-md-2" id="sidebar">
+            <div class="mb-4 h-100">
                 <div class="list-group">
-                    <a asp-action="Index" asp-route-forumId="" class="nav-link active">Tutti</a>
+                    <a asp-action="Index" asp-route-forumId="" class="nav-link rounded-pill active">Tutti</a>
                     @foreach (Forum forum in Model.Forums)
                     {
-                        <a asp-controller="Forum" asp-action="Index" asp-route-forumId="@forum.ID" class="nav-link">@forum.Nome</a>
+                        <a asp-controller="Forum" asp-action="Index" asp-route-forumId="@forum.ID" class="nav-link rounded-pill">@forum.Nome</a>
                     }
                 </div>
             </div>
