@@ -174,10 +174,9 @@
                             foreach (var forum in Model.Forums)
                             {
                                 <li class="mb-2">
-                                    <a asp-controller="Forum" asp-action="Details"
-                                       asp-route-id="@forum.ID"
-                                       class="text-decoration-none text-indigo">
-                                        <i class="ti ti-chevron-right"></i>
+                                <a href="@Url.Action("Index", "Forum", new { forumId = forum.ID })"
+                                   class="text-decoration-none text-indigo">
+                                    <i class="ti ti-chevron-right"></i>
                                         @forum.Nome
                                     </a>
                                 </li>
