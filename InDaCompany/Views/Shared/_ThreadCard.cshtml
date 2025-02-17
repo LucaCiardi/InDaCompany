@@ -62,9 +62,13 @@
                     </a>
                 }
 
-                <button class="btn btn-outline-indigo btn-sm me-2">
-                    <i class="ti ti-thumb-up"></i> Mi piace
+                <button class="btn btn-outline-indigo btn-sm me-2 likeButton"
+                        data-thread-id="@Model.ID"
+                        onclick="toggleLike(@Model.ID)">
+                    <i class="ti ti-thumb-up"></i>
+                    Mi piace (<span id="likeCount-@Model.ID">0</span>)
                 </button>
+
 
                 <button class="btn btn-outline-indigo btn-sm btnComment" data-thread-id="@Model.ID">
                     <i class="bi bi-chat-dots me-1"></i>Commenti

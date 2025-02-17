@@ -235,3 +235,7 @@ body{
     width: auto;
     object-fit: contain;
 }
+.likeButton.active {
+    background-color: indigo;
+    color: white;
+}
