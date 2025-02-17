@@ -55,6 +55,28 @@
                     <span asp-validation-for="Stato" class="text-danger"></span>
                 </div>
 
+                @if (ViewBag.InfoUtente.Ruolo == "Admin" || ViewBag.InfoUtente.Ruolo == "Manager")
+                {
+                    <div class="form-group mb-3">
+                        <label asp-for="AssegnatoAID" class="control-label">Assegnato a</label>
+                        <select asp-for="AssegnatoAID" class="form-select" required>
+                            @if (ViewBag.Assegnatario == null)
+                            {
+                                <option value="" selected>-- Seleziona un collaboratore --</option>
+                            }
+                            else
+                            {
+                            <option value="@Model.AssegnatoAID" selected>@ViewBag.Assegnatario.NomeCompleto</option>
+                            }
+                            @foreach (var user in ViewBag.ListaUtenti)
+                            {
+                                <option value="@user.ID">@user.NomeCompleto</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AssegnatoAID" class="text-danger"></span>
+                    </div>
+                }
+
 
                 <div class="form-group">
                     <button type="submit" class="btn btn-sm btn-indigo">

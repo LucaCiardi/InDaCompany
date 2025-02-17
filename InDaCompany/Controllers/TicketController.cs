@@ -53,8 +53,14 @@ namespace InDaCompany.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var listaUtenti = await _daoUtenti.GetAllAsync();
+            int userId = GetCurrentUserId();
+            var user = await _daoUtenti.GetByIdAsync(userId);
+            ViewBag.Utente = user;
+            ViewBag.ListaUtenti = listaUtenti;
+
             return View(new Ticket { Stato = "Aperto" });
         }
 
@@ -90,13 +96,20 @@ namespace InDaCompany.Controllers
             {
                 int userId = GetCurrentUserId();
                 var user = await _daoUtenti.GetByIdAsync(userId);
+                var listaUtenti = await _daoUtenti.GetAllAsync();
 
                 var ticket = await _daoTicket.GetByIdAsync(id);
+
                 if (ticket == null)
                 {
                     _logger.LogWarning("Ticket non trovato: {Id}", id);
                     return NotFound();
                 }
+
+                var assegnatario = listaUtenti.Where(u => u.ID == ticket.AssegnatoAID).FirstOrDefault();
+
+                ViewBag.Assegnatario = assegnatario;
+                ViewBag.ListaUtenti = listaUtenti;
                 ViewBag.InfoUtente = user;
                 return View(ticket);
             }
