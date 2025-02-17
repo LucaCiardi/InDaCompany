@@ -46,16 +46,16 @@
     <!-- Navbar -->
     <ul class="nav nav-pills mt-3 mb-4">
         <li class="nav-item">
-            <a class="nav-link active" href="#threads">Thread</a>
+            <a class="nav-link2 active" href="#threads">Thread</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#comments">Commenti</a>
+            <a class="nav-link2" href="#comments">Commenti</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#liked">Mi piace</a>
+            <a class="nav-link2" href="#liked">Mi piace</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#tickets">Ticket</a>
+            <a class="nav-link2" href="#tickets">Ticket</a>
         </li>
     </ul>
 
@@ -283,6 +283,27 @@
         z-index: 1000;
     }
 
+    .nav-pills .nav-link2 {
+        color: indigo;
+        display: block;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out;
+    }
+
+        .nav-pills .nav-link2.active {
+            background-color: indigo;
+            color: white;
+        }
+
+        .nav-pills .nav-link2:hover {
+            color: rgb(141, 65, 195);
+        }
+
+    .btn:focus, .btn:active:focus, .btn-link.nav-link2:focus {
+        box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem indigo;
+    }
+
 </style>
 
 @section Scripts {
@@ -299,7 +320,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('.nav-link');
+            const navLinks = document.querySelectorAll('.nav-link2');
             const contentSections = document.querySelectorAll('.content-section');
 
             navLinks.forEach(link => {
@@ -347,5 +368,6 @@
             }
         });
     </script>
+
 }
 
