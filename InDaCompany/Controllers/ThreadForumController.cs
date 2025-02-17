@@ -172,7 +172,8 @@ public async Task<IActionResult> Edit(int id, ThreadForum thread, IFormFile? New
                 var thread = await _daoThread.GetByIdAsync(id);
                 if (thread == null) return NotFound();
 
-                if (thread.AutoreID != int.Parse(User.FindFirst("UserId")?.Value ?? "0"))
+                if (thread.AutoreID != int.Parse(User.FindFirst("UserId")?.Value ?? "0")
+                    && !User.IsInRole("Admin") && !User.IsInRole("Manager"))
                 {
                     return Forbid();
                 }
