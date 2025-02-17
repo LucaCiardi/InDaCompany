@@ -9,7 +9,7 @@
         <div class="card col-md-2" id="sidebar">
             <div class="mb-4 h-100">
                 <div class="list-group">
-                    <a asp-action="Index" asp-route-forumId="" class="nav-link rounded-pill active">Tutti</a>
+                    <a asp-action="Index" asp-route-forumId="" class="nav-link rounded-pill">Tutti</a>
                     @foreach (Forum forum in Model.Forums)
                     {
                         <a asp-controller="Forum" asp-action="Index" asp-route-forumId="@forum.ID" class="nav-link rounded-pill">@forum.Nome</a>
@@ -60,6 +60,16 @@
                 });
             });
         });
+  $(document).ready(function(){
+    // Gestisce il click su un elemento della lista
+    $('#sidebar .list-group a').click(function(e){
+      // Rimuove la classe "active" da tutti i link della sidebar
+      $('#sidebar .list-group a').removeClass('active');
+      // Aggiunge la classe "active" solo al link cliccato
+      $(this).addClass('active');
+    });
+  });
+
     </script>
 }
 

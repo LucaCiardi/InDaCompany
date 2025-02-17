@@ -28,6 +28,7 @@
                 var infoUtente = utenti.Where(u => u.ID == commento.AutoreID)
                 .Select(u => new { NomeECognome = u.Nome + " " + u.Cognome, Email = u.Email })
                 .FirstOrDefault();
+                <hr />
                 <div class="d-flex justify-content-between">
                         <p class="fw-bold mb-0">@infoUtente.NomeECognome</p>
                     <div class="d-flex flex-column align-items-end">
