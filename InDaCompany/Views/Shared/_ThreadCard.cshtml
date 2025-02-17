@@ -1,5 +1,7 @@
 ﻿@model ThreadForum
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
 <div class="card mb-4 shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">@Model.Titolo</h5>
@@ -30,6 +32,7 @@
                     <p class="fw-bold mb-0">@infoUtente.NomeECognome</p>
                     <p class="text-muted small mb-0">@commento.DataFormattata</p>
                 </div>
+
                 <p class="card-text">@commento.Testo</p>
             }
         }
@@ -51,13 +54,23 @@
                         <i class="bi bi-pencil me-1"></i>Modifica
                     </a>
                 }
+
                 <button class="btn btn-outline-indigo btn-sm me-2">
                     <i class="ti ti-thumb-up"></i> Mi piace
                 </button>
+
+                <button class="btn btn-outline-indigo btn-sm btnComment" data-thread-id="@Model.ID">
+                    <i class="bi bi-chat-dots me-1"></i>Commenti
+                </button>
             </div>
-            <button class="btn btn-outline-indigo btn-sm btnComment" data-thread-id="@Model.ID">
-                <i class="bi bi-chat-dots me-1"></i>Commenti
-            </button>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                {
+                <a href="#" class="btn btn-danger btn-sm deleteButton" data-id="@Model.ID" data-titolo="@Html.Raw(Model.Titolo)">
+                    <i class="bi bi-trash me-1"></i> Elimina
+                    </a>                    
+                }
+
         </div>
 
         <div class="comments d-none" id="comments-@Model.ID">
@@ -76,3 +89,45 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1"
+     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Conferma eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="testoDelModal" class="modal-body">
+                Sei sicuro di voler eliminare questo Thread?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="post" asp-controller="ThreadForum" asp-action="DeleteConfirmed">
+                    <input type="hidden" name="id" id="deleteId">
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $('.deleteButton').click(function (e) {
+            e.preventDefault();
+
+            var id = $(this).data('id');
+            var nomeThread = $(this).data('titolo');
+
+
+            $('#testoDelModal').text('Sei sicuro di voler eliminare il thread "' + nomeThread + '" ?');
+
+            $('#deleteId').val(id);
+
+            $('#confirmDeleteModal').modal('show');
+
+        });
+    });
+</script>
