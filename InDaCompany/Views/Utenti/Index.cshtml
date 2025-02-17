@@ -41,6 +41,10 @@
                                         onclick="confirmResetPassword(@utente.ID)">
                                     <i class="ti ti-key"></i>
                                 </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="confirmDelete(@utente.ID)">
+                                    <i class="ti ti-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -57,6 +61,31 @@
                 var form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '@Url.Action("ResetPassword", "Utenti")';
+
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+                form.appendChild(idInput);
+
+                var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenElement) {
+                    var antiForgeryToken = document.createElement('input');
+                    antiForgeryToken.type = 'hidden';
+                    antiForgeryToken.name = '__RequestVerificationToken';
+                    antiForgeryToken.value = tokenElement.value;
+                    form.appendChild(antiForgeryToken);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        function confirmDelete(userId) {
+            if (confirm('Sei sicuro di voler eliminare questo utente?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Delete", "Utenti")';
 
                 var idInput = document.createElement('input');
                 idInput.type = 'hidden';
